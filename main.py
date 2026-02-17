@@ -1,14 +1,18 @@
 import sys
 import pathlib
+from keystroke_monitor import KeystrokeMonitor
+from initialization import run_initialization
 
-import KeystrokeMonitor 
 
 class SpyglassApp:
-    print("Initializing SpyglassApp...")
+    """Main application class"""
     
-    def __init__(self):
-        #Main application class
+    def __init__(self, initializer):
+        """Initialize SpyglassApp"""
+        print("Initializing SpyglassApp...")
         self.keystroke_monitor = KeystrokeMonitor()
+        self.initializer = initializer
+        self.is_running = False
         
     def startMonitoring(self):
         #Start monitoring keystrokes
@@ -58,30 +62,66 @@ class SpyglassApp:
         print(f"Memory Usage: {psutil.virtual_memory().percent}%")
         
     def run(self) -> None:
-        #App start
-        while True:
-            print("\nSpyglassApp Menu:")
+        """Run the main application menu"""
+        self.is_running = True
+        while self.is_running:
+            print("\n" + "="*50)
+            print("SPYGLASS MONITORING APPLICATION".center(50))
+            print("="*50)
             print("1. Start Monitoring")
             print("2. Stop Monitoring")
             print("3. Show Analytics")
             print("4. Show Reports")
+            print("5. Show Device Info")
+            print("6. Exit")
+            print("="*50)
             
-            choice = input("Select an option (1-4): ")
+            choice = input("Select an option (1-6): ").strip()
             
             if choice == '1':
                 self.startMonitoring()
             elif choice == '2':
                 self.stopMonitoring()
             elif choice == '3':
-                #Analytics placeholder
                 print("Analytics feature is under development.")
             elif choice == '4':
                 self.generateReports()
+            elif choice == '5':
+                device_info = self.initializer.get_device_info()
+                if device_info:
+                    import json
+                    print("\nStored Device Information:")
+                    print(json.dumps(device_info, indent=2))
+            elif choice == '6':
+                print("Exiting Spyglass...")
+                self.is_running = False
             else:
                 print("Invalid choice. Please select a valid option.")
-                
-                
     
+    def close(self) -> None:
+        """Close the application and clean up resources"""
+        if self.initializer:
+            self.initializer.cleanup()
 
-SpyglassApp = SpyglassApp()
-SpyglassApp.run()
+
+def main():
+    """Main entry point for Spyglass application"""
+    try:
+        # Run initialization with admin privileges and device info retrieval
+        initializer = run_initialization()
+        
+        # Start the main application
+        app = SpyglassApp(initializer)
+        app.run()
+        app.close()
+        
+    except KeyboardInterrupt:
+        print("\n\nApplication interrupted by user.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"Error running application: {e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

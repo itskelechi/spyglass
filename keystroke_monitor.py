@@ -8,7 +8,7 @@ class KeystrokeMonitor:
     #Monitor keystrokes
     
     def __init__(self, time_interval: int = 60, log_file: str = "keystrokes.log"):
-       print("Initializing KeystrokeMonitor...")
+        print("Initializing KeystrokeMonitor...")
         
         self.running = False
         self.time_interval = time_interval
