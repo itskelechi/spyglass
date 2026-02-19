@@ -1,30 +1,30 @@
-"""
+# 
 Spyglass Application Initialization Module
 Handles admin privileges, device information retrieval, and database setup on first launch
-"""
+# 
 
 import sys
 from typing import bool_
 
-from admin_handler import AdminHandler
-from device_info import DeviceInfo
+from adminHandler import AdminHandler
+from userInfo import DeviceInfo
 from database import DatabaseManager
 
 
 class SpyglassInitializer:
-    """Initialize Spyglass application with required permissions and device info"""
+    # Initialize Spyglass application with required permissions and device info# 
     
     def __init__(self):
-        self.admin_handler = None
-        self.device_info = None
+        self.adminHandler = None
+        self.userInfo = None
         self.database = None
         self.user_id = None
     
     def initialize(self) -> bool:
-        """Run full initialization sequence"""
-        print("="*60)
+        # Run full initialization sequence# 
+        print("*"*60)
         print("SPYGLASS APPLICATION INITIALIZATION".center(60))
-        print("="*60)
+        print("*"*60)
         
         # Step 1: Request admin privileges
         print("\n[Step 1/4] Checking Administrator Privileges...")
@@ -40,39 +40,39 @@ class SpyglassInitializer:
         
         # Step 3: Retrieve device information
         print("\n[Step 3/4] Gathering Device Information...")
-        if not self._retrieve_device_info():
+        if not self._retrieve_userInfo():
             print("ERROR: Failed to retrieve device information.")
             return False
         
         # Step 4: Store device information in database
         print("\n[Step 4/4] Storing Device Information...")
-        if not self._store_device_info():
+        if not self._store_userInfo():
             print("ERROR: Failed to store device information.")
             return False
         
-        print("\n" + "="*60)
+        print("\n" + "*"*60)
         print("INITIALIZATION SUCCESSFUL".center(60))
-        print("="*60 + "\n")
+        print("*"*60 + "\n")
         
         return True
     
     def _request_admin_privileges(self) -> bool:
-        """Request and verify administrator privileges"""
+        # Request and verify administrator privileges# 
         try:
-            self.admin_handler = AdminHandler()
-            print(f"Current privilege level: {self.admin_handler.get_status()}")
+            self.adminHandler = AdminHandler()
+            print(f"Current privilege level: {self.adminHandler.get_status()}")
             
-            if not self.admin_handler.verify_admin_privileges():
+            if not self.adminHandler.verify_admin_status():
                 return False
             
-            print("✓ Administrator privileges confirmed.")
+            print("Administrator privileges confirmed.")
             return True
         except Exception as e:
             print(f"Error checking admin privileges: {e}")
             return False
     
     def _initialize_database(self) -> bool:
-        """Initialize the database with SQLCipher encryption"""
+        # Initialize the database with SQLCipher encryption# 
         try:
             # Generate encryption key from machine identifier
             # In production, this should be more robust
@@ -85,30 +85,30 @@ class SpyglassInitializer:
             if not self.database.verifyConnection():
                 return False
             
-            print("✓ Database initialized with SQLCipher encryption and verified.")
+            print("Database initialized with SQLCipher encryption and verified.")
             return True
         except Exception as e:
             print(f"Error initializing database: {e}")
             return False
     
-    def _retrieve_device_info(self) -> bool:
-        """Retrieve device information"""
+    def _retrieve_userInfo(self) -> bool:
+        # Retrieve device information# 
         try:
-            self.device_info = DeviceInfo()
+            self.userInfo = DeviceInfo()
             
             # Print summary for user
-            self.device_info.print_summary()
+            self.userInfo.print_summary()
             
-            print("✓ Device information retrieved successfully.")
+            print("Device information retrieved successfully.")
             return True
         except Exception as e:
             print(f"Error retrieving device information: {e}")
             return False
     
-    def _store_device_info(self) -> bool:
-        """Store device information in database"""
+    def _store_userInfo(self) -> bool:
+        # Store device information in database# 
         try:
-            if self.device_info is None or self.database is None:
+            if self.userInfo is None or self.database is None:
                 print("Device info or database not initialized.")
                 return False
             
@@ -118,30 +118,30 @@ class SpyglassInitializer:
             
             success = self.database.storeDeviceInfo(
                 self.user_id,
-                self.device_info.to_dict()
+                self.userInfo.to_dict()
             )
             
             if success:
-                print("✓ Device information stored in database.")
+                print("Device information stored in database.")
             return success
         except Exception as e:
             print(f"Error storing device information: {e}")
             return False
     
-    def get_device_info(self) -> dict:
-        """Get the stored device information"""
-        if self.device_info:
-            return self.device_info.to_dict()
+    def get_userInfo(self) -> dict:
+        # Get the stored device information# 
+        if self.userInfo:
+            return self.userInfo.to_dict()
         return {}
     
     def cleanup(self) -> None:
-        """Clean up resources"""
+        # Clean up resources# 
         if self.database:
             self.database.closeDB()
 
 
 def run_initialization():
-    """Run the initialization process"""
+    # Run the initialization process# 
     initializer = SpyglassInitializer()
     
     try:

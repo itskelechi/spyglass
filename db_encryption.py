@@ -1,7 +1,7 @@
-"""
+# 
 Database Encryption Utilities
 Provides encryption and decryption functions for database security
-"""
+# 
 
 import os
 from cryptography.fernet import Fernet
@@ -9,7 +9,7 @@ from typing import Optional
 
 
 class DatabaseEncryption:
-    """Handle encryption/decryption of database files"""
+    # Handle encryption/decryption of database files# 
     
     def __init__(self, key_file: str = ".spyglass_key"):
         self.key_file = key_file
@@ -17,7 +17,7 @@ class DatabaseEncryption:
         self._load_or_create_key()
     
     def _load_or_create_key(self) -> None:
-        """Load existing key or create a new one"""
+        # Load existing key or create a new one# 
         if os.path.exists(self.key_file):
             with open(self.key_file, 'rb') as f:
                 self.key = f.read()
@@ -26,7 +26,7 @@ class DatabaseEncryption:
             self._save_key(self.key)
     
     def _save_key(self, key: bytes) -> None:
-        """Save encryption key to file"""
+        # Save encryption key to file# 
         try:
             # Make key file read-only
             with open(self.key_file, 'wb') as f:
@@ -37,7 +37,7 @@ class DatabaseEncryption:
             print(f"Error saving encryption key: {e}")
     
     def encrypt_file(self, file_path: str, output_path: Optional[str] = None) -> bool:
-        """Encrypt a file using Fernet encryption"""
+        # Encrypt a file using Fernet encryption# 
         if not os.path.exists(file_path):
             print(f"File not found: {file_path}")
             return False
@@ -63,7 +63,7 @@ class DatabaseEncryption:
             return False
     
     def decrypt_file(self, file_path: str, output_path: Optional[str] = None) -> bool:
-        """Decrypt a file using Fernet decryption"""
+        # Decrypt a file using Fernet decryption# 
         if not os.path.exists(file_path):
             print(f"File not found: {file_path}")
             return False
@@ -89,7 +89,7 @@ class DatabaseEncryption:
             return False
     
     def backup_database(self, db_path: str, backup_dir: str = "backups") -> bool:
-        """Create an encrypted backup of the database"""
+        # Create an encrypted backup of the database# 
         try:
             import shutil
             from datetime import datetime
@@ -123,7 +123,7 @@ class DatabaseEncryption:
             return False
     
     def restore_database(self, backup_path: str, db_path: str) -> bool:
-        """Restore database from encrypted backup"""
+        # Restore database from encrypted backup# 
         try:
             import shutil
             
@@ -151,7 +151,7 @@ class DatabaseEncryption:
             return False
     
     def get_key_fingerprint(self) -> str:
-        """Get a fingerprint of the encryption key for verification"""
+        # Get a fingerprint of the encryption key for verification# 
         import hashlib
         
         key_hash = hashlib.sha256(self.key).hexdigest()
@@ -159,7 +159,7 @@ class DatabaseEncryption:
 
 
 def secure_delete_file(file_path: str, passes: int = 3) -> bool:
-    """Securely delete a file by overwriting it multiple times"""
+    # Securely delete a file by overwriting it multiple times# 
     try:
         file_size = os.path.getsize(file_path)
         

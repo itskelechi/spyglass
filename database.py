@@ -74,14 +74,12 @@ class DatabaseManager:
                     -- -------------------------
                     CREATE TABLE IF NOT EXISTS user (
                     userID        INTEGER PRIMARY KEY,
+                    username      TEXT    NOT NULL,
                     userSystem     TEXT    NOT NULL,
-                    email          TEXT    NOT NULL,
                     processor      TEXT    NOT NULL,
-                    passwordHash  TEXT    NOT NULL,
                     createdAt     TEXT    NOT NULL DEFAULT (datetime('now')),
 
-                    CONSTRAINT uq_user_id UNIQUE (userID),
-                    CONSTRAINT uq_user_email UNIQUE (email)
+                    CONSTRAINT uq_user_id UNIQUE (userID)
                     );
 
                     -- -------------------------
@@ -297,8 +295,9 @@ class DatabaseManager:
             print(f"Database connection verification failed: {e}")
             return False
     
-    def storeDeviceInfo(self, user_id: int, device_info: dict) -> bool:
-        """Store device information in the user table"""
+    def UpdateUserTable(self, deviceInfo: dict) -> bool:
+        #Store device information in the user table
+        
         if self.engine is None:
             print("Database engine is not initialized.")
             return False
@@ -306,47 +305,49 @@ class DatabaseManager:
         try:
             import json
             
-            system_info = device_info.get('system', {})
-            hardware_info = device_info.get('hardware', {})
+            sysInfo = deviceInfo.get('system', {})
+            hardwareInfo = deviceInfo.get('hardware', {})
             
             # Format userSystem as: osType osVersion osBuild
-            user_system = f"{system_info.get('os', '')} {system_info.get('os_version', '')} (Build {system_info.get('os_build', '')})".strip()
+            userSystem = f"{sysInfo.get('os', '')} {sysInfo.get('os_version', '')} (Build {sysInfo.get('os_build', '')})".strip()
             
             # Use hostname as username
-            username = system_info.get('hostname', '')
+            username = sysInfo.get('hostname', '')
             
             # Machine ID
-            machine_id = hardware_info.get('machine_id', '')
+            machineID = hardwareInfo.get('machine_id', '')
             
             # Full system info as JSON
-            system_info_json = json.dumps(device_info)
+            systemInfo = json.dumps(deviceInfo)
+            
+            #getprocessor info
+            processor = hardwareInfo.get('processor', '')
             
             # Insert/Update device info into user table
             insert_query = """
                 INSERT OR REPLACE INTO user 
-                (userID, userSystem, username, machineId, systemInfo, retrievedAt)
-                VALUES (?, ?, ?, ?, ?, datetime('now'))
+                (userID, username,userSystem, processor, createdAt)
+                VALUES (?, ?, ?, ?, datetime('now'))
             """
             
             values = (
-                user_id,
-                user_system,
+                machineID,
                 username,
-                machine_id,
-                system_info_json,
+                userSystem,
+                processor,
             )
             
             with self.engine.connect() as connection:
                 connection.execute(insert_query, values)
                 connection.commit()
             
-            print(f"Device information stored successfully for user {user_id}.")
+            print(f"Device information stored successfully for user {machineID}.")
             return True
         except Exception as e:
             print(f"Error storing device information: {e}")
             return False
     
-    def getDeviceInfo(self, user_id: int) -> Optional[dict]:
+    def getUserInfo(self, user_id: int) -> Optional[dict]:
         """Retrieve device information from the user table"""
         if self.engine is None:
             print("Database engine is not initialized.")

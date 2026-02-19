@@ -7,15 +7,15 @@ import subprocess
 from typing import Dict, Any, Optional
 from datetime import datetime
 
-class DeviceInfo:
-    """Retrieve system and device information from Windows machine"""
+class UserInfo:
+    # Retrieve system and device information from Windows machine# 
     
     def __init__(self):
         self.info = {}
         self._gather_info()
     
     def _gather_info(self) -> None:
-        """Gather all device information"""
+        # Gather all device information# 
         self.info = {
             "timestamp": datetime.now().isoformat(),
             "system": self._get_system_info(),
@@ -27,7 +27,7 @@ class DeviceInfo:
         }
     
     def _get_system_info(self) -> Dict[str, str]:
-        """Get OS and system information"""
+        # Get OS and system information# 
         try:
             return {
                 "os": platform.system(),
@@ -43,7 +43,7 @@ class DeviceInfo:
             return {}
     
     def _get_windows_build(self) -> str:
-        """Get Windows build number"""
+        # Get Windows build number# 
         try:
             result = subprocess.run(
                 ["powershell", "-Command", "Get-ItemPropertyValue -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuildNumber"],
@@ -56,7 +56,7 @@ class DeviceInfo:
             return f"Error: {str(e)}"
     
     def _get_hardware_info(self) -> Dict[str, Any]:
-        """Get hardware information"""
+        # Get hardware information# 
         try:
             return {
                 "machine_id": str(uuid.node()),
@@ -71,7 +71,7 @@ class DeviceInfo:
             return {}
     
     def _get_network_info(self) -> Dict[str, Any]:
-        """Get network information"""
+        # Get network information# 
         try:
             net_info = {
                 "hostname": socket.gethostname(),
@@ -93,7 +93,7 @@ class DeviceInfo:
             return {}
     
     def _get_local_ip(self) -> str:
-        """Get local IP address"""
+        # Get local IP address# 
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("8.8.8.8", 80))
@@ -104,7 +104,7 @@ class DeviceInfo:
             return "127.0.0.1"
     
     def _get_storage_info(self) -> Dict[str, Any]:
-        """Get storage information for all disks"""
+        # Get storage information for all disks# 
         try:
             storage_info = {}
             for partition in psutil.disk_partitions():
@@ -129,7 +129,7 @@ class DeviceInfo:
             return {}
     
     def _get_memory_info(self) -> Dict[str, Any]:
-        """Get detailed memory information"""
+        # Get detailed memory information# 
         try:
             vm = psutil.virtual_memory()
             swap = psutil.swap_memory()
@@ -156,7 +156,7 @@ class DeviceInfo:
             return {}
     
     def _get_processor_info(self) -> Dict[str, Any]:
-        """Get processor information"""
+        # Get processor information# 
         try:
             return {
                 "processor": platform.processor(),
@@ -170,7 +170,7 @@ class DeviceInfo:
             return {}
     
     def _get_cpu_freq(self) -> Dict[str, Optional[float]]:
-        """Get CPU frequency"""
+        # Get CPU frequency# 
         try:
             freq = psutil.cpu_freq()
             return {
@@ -182,7 +182,7 @@ class DeviceInfo:
             return {"current_mhz": None, "min_mhz": None, "max_mhz": None}
     
     def _get_cpu_stats(self) -> Dict[str, int]:
-        """Get CPU statistics"""
+        # Get CPU statistics# 
         try:
             stats = psutil.cpu_stats()
             return {
@@ -195,22 +195,22 @@ class DeviceInfo:
             return {}
     
     def get_all_info(self) -> Dict[str, Any]:
-        """Return all gathered device information"""
+        # Return all gathered device information# 
         return self.info
     
     def get_info_by_category(self, category: str) -> Optional[Dict[str, Any]]:
-        """Get device info by category"""
+        # Get device info by category# 
         return self.info.get(category)
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for database storage"""
+        # Convert to dictionary for database storage# 
         return self.info
     
     def print_summary(self) -> None:
-        """Print a summary of device information"""
-        print("\n" + "="*60)
+        # Print a summary of device information# 
+        print("\n" + "*"*60)
         print("DEVICE INFORMATION SUMMARY".center(60))
-        print("="*60)
+        print("*"*60)
         
         sys_info = self.info.get("system", {})
         print(f"\nSystem:")
@@ -232,7 +232,7 @@ class DeviceInfo:
         print(f"\nProcessor:")
         print(f"  CPU Usage: {proc_info.get('cpu_percent')}%")
         
-        print("\n" + "="*60 + "\n")
+        print("\n" + "*"*60 + "\n")
 
 
 # Quick import for common systems

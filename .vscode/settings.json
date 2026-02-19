@@ -2,7 +2,12 @@
     "cSpell.words": [
         "appmon",
         "autoflush",
+        "getprocessor",
+        "keylogging",
+        "psutil",
         "pynput",
-        "sessionmaker"
+        "sessionmaker",
+        "sqlalchemy",
+        "sqlcipher"
     ]
 }

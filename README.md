@@ -1,32 +1,51 @@
 # Spyglass - Device Monitoring & Keystroke Logger
 
-A comprehensive Windows device monitoring application that captures device information, monitors keystroke activity, and stores encrypted data in a local SQLite database.
+A Windows-based device monitoring application with consent-driven monitoring levels, keystroke logging, and encrypted local data storage.
+
+## Quick Start - Keystroke Logging Test
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run keystroke logging test
+python keylogger.py
+```
 
 ## Features
 
-- **Windows Admin Privileges**: Automatically requests and verifies administrator privileges on startup
-- **Device Information Retrieval**: Captures comprehensive system information including:
-  - OS version, build number, hostname, username
-  - CPU/Processor information and count
-  - Memory (RAM) specifications
-  - Storage information for all disks
-  - Network configuration and IP addresses
-  - MAC addresses
+- **User Consent Screen**: Explicit permission request with monitoring level selection
+- **Configurable Monitoring Levels**:
+  - **LOW**: Basic process monitoring only
+  - **HIGH**: Full monitoring including keystroke logging
   
-- **Encrypted Database**: Local SQLite database for storing device and monitoring data
-- **Keystroke Monitoring**: Real-time keystroke logging and analysis
-- **Activity Logging**: Track application usage and user activity
-- **Multi-threaded Architecture**: Handles multiple monitoring tasks simultaneously
+- **Keystroke Logging** (HIGH level only):
+  - Real-time keyboard input capture
+  - Keystroke frequency analysis
+  - Modifier key tracking
+  - Privacy-conscious implementation
+
+- **Encrypted Database**: SQLCipher encrypted local storage for all collected data
+- **Windows Admin Privileges**: Automatic escalation for system-level monitoring
+- **Device Information**: System details captured on initialization
+- **Thread-Safe Operations**: Concurrent monitoring without conflicts
 
 ## System Requirements
 
-- **OS**: Windows (Windows 7 or later)
-- **Python**: Python 3.8 or higher
-- **Privileges**: Administrator privileges required
+- **OS**: Windows 7 or later
+- **Python**: 3.8 or higher
+- **Privileges**: Administrator (requested on startup)
 
 ## Installation
 
-### 1. Install Dependencies
+### 1. Clone or Download Project
+
+```bash
+# Navigate to project directory
+cd spyglass
+```
+
+### 2. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -34,19 +53,98 @@ pip install -r requirements.txt
 
 **Required Packages**:
 - `sqlalchemy` - Database ORM
-- `psutil` - System and process utilities
+- `psutil` - System information
 - `pynput` - Keyboard monitoring
 - `cryptography` - Encryption support
+- `sqlcipher3-binary` - SQLite encryption
 
-### 2. Run the Application
+## Usage
+
+### Run Keystroke Test (Recommended for Testing)
+
+```bash
+python keylogger.py
+```
+
+**What happens:**
+1. **Consent Screen**: Review monitoring terms and select monitoring level
+   - Select `1` for LOW (basic monitoring)
+   - Select `2` for HIGH (includes keystroke logging)
+   
+2. **Configuration**: Settings are saved based on your selection
+
+3. **Database Setup**: SQLCipher-encrypted database is initialized
+
+4. **Keystroke Test Menu** (if HIGH level selected):
+   - 30-second keystroke test
+   - 60-second keystroke test  
+   - View current settings
+   - Exit
+
+### Main Application
 
 ```bash
 python main.py
 ```
 
-**IMPORTANT**: The application will automatically request Windows administrator privileges if not already running as admin. Click "Yes" on the UAC prompt when it appears.
+Shows menu to launch the keystroke test.
 
-## Application Structure
+## Test Flow
+
+```
+┌─────────────────────────────────────────┐
+│  Admin Privileges Check                 │
+│  (Requests UAC elevation if needed)     │
+└──────────────┬──────────────────────────┘
+               │
+┌──────────────▼──────────────────────────┐
+│  Consent & Monitoring Level Screen      │
+│  - LOW: Process monitoring only         │
+│  - HIGH: + Keystroke logging            │
+└──────────────┬──────────────────────────┘
+               │
+┌──────────────▼──────────────────────────┐
+│  Configuration Setup                    │
+│  Settings saved to spyglass_settings.json│
+└──────────────┬──────────────────────────┘
+               │
+┌──────────────▼──────────────────────────┐
+│  Database Initialization                │
+│  SQLCipher encryption enabled           │
+│  User table created                     │
+└──────────────┬──────────────────────────┘
+               │
+┌──────────────▼──────────────────────────┐
+│  Keystroke Test (HIGH level only)       │
+│  - Capture keystrokes                   │
+│  - Display frequency analysis           │
+│  - Store encrypted in database          │
+└─────────────────────────────────────────┘
+```
+
+## Core Modules
+
+### `keylogger.py`
+Main testing script that orchestrates:
+- Admin privilege escalation
+- Consent screen display
+- Configuration management
+- Database setup
+- Keystroke test execution
+
+### `consent.py`
+Displays comprehensive consent form:
+- Monitoring disclosure
+- Privacy & data usage information
+- Monitoring level selection
+- User acknowledgment
+
+### `configSettings.py`
+Manages application configuration:
+- Monitoring level (LOW/HIGH)
+- Feature toggles
+- Storage settings
+- Loads/saves to `spyglass_settings.json`
 
 ### Core Modules
 
@@ -62,12 +160,12 @@ python main.py
   3. Retrieves device information
   4. Stores device information encrypted in the database
 
-#### `admin_handler.py`
+#### `adminHandler.py`
 - Checks current administrator status
 - Handles UAC elevation requests
 - Verifies admin privileges before allowing sensitive operations
 
-#### `device_info.py`
+#### `userInfo.py`
 - Comprehensive device information gathering
 - Retrieves system, hardware, network, storage, and processor info
 - Returns both raw data and formatted summaries
@@ -88,16 +186,15 @@ python main.py
 - SQLite database management with SQLAlchemy ORM
 - Encryption-ready (can be extended with sqlcipher3)
 - Database tables:
-  - `user` - User accounts and credentials
-  - `device_info` - Stored device information
-  - `application` - Monitored applications
-  - `keystroke_summary` - Keystroke activity logs
-  - `activity_log` - User activity events
-  - `alert` - Security alerts
-  - `monitoring_settings` - User preferences
+  - `user` - User accounts and credentials and stored device information
+  - `applicationLogs` - Monitored applications
+  - `keystrokeSummary` - Keystroke activity logs
+  - `activityLog` - User activity events
+  - `alertLogs` - Security alerts
+  - `monitoringSettings` - User preferences
   - And more...
 
-#### `keystroke_monitor.py`
+#### `keylogger.py`
 - Real-time keyboard event monitoring
 - Tracks keystroke frequency and patterns
 - Stores data for periodic analysis
@@ -134,7 +231,7 @@ SPYGLASS MONITORING APPLICATION
 2. Stop Monitoring        - Halt keystroke logging
 3. Show Analytics         - View statistics (TBD)
 4. Show Reports           - Generate monitoring reports
-5. Show Device Info       - Display stored device information
+5. Settings               - Display stored device information & config setup
 6. Exit                   - Close application
 ==================================================
 ```
@@ -143,25 +240,18 @@ SPYGLASS MONITORING APPLICATION
 
 All device data and monitoring logs are stored in `spyglass.db` with the following key tables:
 
-### device_info Table
+### userInfo Table
 Stores the retrieved device information from initialization:
 ```sql
-CREATE TABLE device_info (
-  deviceInfoID INTEGER PRIMARY KEY,
-  userID INTEGER,
-  osType TEXT,
-  osVersion TEXT,
-  osBuild TEXT,
-  hostname TEXT,
-  username TEXT,
-  machineId TEXT UNIQUE,
+CREATE TABLE userInfo (
+  userID TEXT PRIMARY, --machineId
+  SystemInfo  --osType,  osVersion,  osBuild 
+  username TEXT, --hostname
+  email TEXT, --
   processorCount INTEGER,
-  totalRamGB REAL,
-  localIp TEXT,
-  macAddresses TEXT (JSON),
-  storageInfo TEXT (JSON),
+  macAddresses TEXT (JSON), 
   systemInfo TEXT (JSON),
-  retrievedAt TIMESTAMP
+  createdAt TIMESTAMP
 );
 ```
 
@@ -179,11 +269,11 @@ CREATE TABLE device_info (
 
 ### Adding New Device Info
 
-Edit `device_info.py` to add new information gathering methods:
+Edit `userInfo.py` to add new information gathering methods:
 
 ```python
 def _get_custom_info(self) -> Dict[str, Any]:
-    """Get custom device information"""
+    # Get custom device information# 
     try:
         # Your custom information gathering code
         return {"custom_key": "value"}
