@@ -73,7 +73,7 @@ class DatabaseManager:
                     -- USER
                     -- -------------------------
                     CREATE TABLE IF NOT EXISTS user (
-                    userID        INTEGER PRIMARY KEY,
+                    userID        TEXT PRIMARY KEY,
                     username      TEXT    NOT NULL,
                     userSystem     TEXT    NOT NULL,
                     processor      TEXT    NOT NULL,
@@ -100,7 +100,7 @@ class DatabaseManager:
                     -- -------------------------
                     CREATE TABLE IF NOT EXISTS monitoring_settings (
                     settingsID               INTEGER PRIMARY KEY AUTOINCREMENT,
-                    userID                   INTEGER NOT NULL,
+                    userID                   TEXT NOT NULL,
                     aggressivenessLevel      TEXT    NOT NULL,           -- e.g., low/medium/high
                     screenshotInterval       INTEGER,                    -- seconds/minutes (define in app)
                     keystrokeLoggingEnabled INTEGER NOT NULL DEFAULT 0, -- boolean (0/1)
@@ -139,7 +139,7 @@ class DatabaseManager:
                     -- -------------------------
                     CREATE TABLE IF NOT EXISTS report (
                     reportID     INTEGER PRIMARY KEY AUTOINCREMENT,
-                    userID       INTEGER NOT NULL,
+                    userID       TEXT NOT NULL,
                     reportType   TEXT    NOT NULL,     -- e.g., daily_summary, incident_report
                     filePath     TEXT    NOT NULL,
                     generatedAt  TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -154,7 +154,7 @@ class DatabaseManager:
                     -- -------------------------
                     CREATE TABLE IF NOT EXISTS activity_log (
                     eventID  INTEGER PRIMARY KEY AUTOINCREMENT,
-                    userID      INTEGER NOT NULL,
+                    userID      TEXT NOT NULL,
                     appID       INTEGER NOT NULL,
                     timestamp        NOT NULL DEFAULT (datetime('now')),
                     action       TEXT    NOT NULL,      -- e.g., launched, focused, closed
@@ -223,7 +223,7 @@ class DatabaseManager:
                     -- -------------------------
                     CREATE TABLE IF NOT EXISTS alert (
                     alertID      INTEGER PRIMARY KEY AUTOINCREMENT,
-                    userID       INTEGER NOT NULL,
+                    userID       TEXT NOT NULL,
                     appID        INTEGER NOT NULL,
                     thresholdID  INTEGER NOT NULL,
                     timestamp     TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -347,7 +347,7 @@ class DatabaseManager:
             print(f"Error storing device information: {e}")
             return False
     
-    def getUserInfo(self, user_id: int) -> Optional[dict]:
+    def getUserInfo(self, user_id: str) -> Optional[dict]:
         """Retrieve device information from the user table"""
         if self.engine is None:
             print("Database engine is not initialized.")
@@ -368,9 +368,6 @@ class DatabaseManager:
             print(f"Error retrieving device information: {e}")
             return None
 
-#global instance
-spyglassDB: Optional[DatabaseManager] = None
-
 def getDB() -> DatabaseManager:
     global spyglassDB
     if spyglassDB is None:
@@ -379,23 +376,179 @@ def getDB() -> DatabaseManager:
     return spyglassDB
 
 #Update tables
-def updateAppSchema() -> None:
-    # Add entries
-    print("Updating database schema if necessary...")
-    
+def updateAppTable(self, appName: str, executablePath: str, vendor: Optional[str] = None) -> bool:
     db = getDB()
     if db.engine is None:
         print("Database engine is not initialized. Cannot update schema.")
         return
     
+    print("Updating Application Table in database schema...")
     try:
         with db.engine.connect() as connection:
-            # Example: Add a new column to the user table for last login time
+        # Example: Add a new column to the user table for last login time
             connection.execute("""
-                INSERT INTO user (userSystem, email, processor, passwordHash)
-                VALUES (
-            """)
+                INSERT INTO application(appName, executablePath, vendor)
+                VALUES (?, ?, ?)
+                ON CONFLICT(executablePath) DO UPDATE SET
+                appName = excluded.appName,
+                vendor = excluded.vendor
+                """, (appName, executablePath, vendor)
+            )
+            connection.commit()
             print("Database schema updated successfully.")
     except Exception as e:
         print(f"Error updating database schema: {e}")
 
+def updateMonitoringSettingsTable(self, userID: str, aggressivenessLevel: str, screenshotInterval: Optional[int] = None,
+                                  keystrokeLoggingEnabled: bool = False, appMonitoringEnabled: bool = True,
+                                  maxStorageMB: int = 500) -> bool:
+    db = getDB()
+    if db.engine is None:
+        print("Database engine is not initialized. Cannot update schema.")
+        return
+    
+    print("Updating Monitoring Settings Table in database schema...")
+    try:
+        with db.engine.connect() as connection:
+            connection.execute("""
+                INSERT INTO monitoring_settings (userID,aggressivenessLevel, screenshotInterval, keystrokeLoggingEnabled, appMonitoringEnabled,maxStorageMB)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(userID) DO UPDATE SET
+                aggressivenessLevel = excluded.aggressivenessLevel,
+                screenshotInterval = excluded.screenshotInterval,
+                keystrokeLoggingEnabled = excluded.keystrokeLoggingEnabled,
+                appMonitoringEnabled = excluded.appMonitoringEnabled,
+                maxStorageMB = excluded.maxStorageMB
+                    """, (userID, aggressivenessLevel, screenshotInterval, keystrokeLoggingEnabled, appMonitoringEnabled, maxStorageMB)
+            )
+            connection.commit()
+            print("Monitoring Settings Table updated successfully.")
+    except Exception as e:
+        print(f"Error updating Monitoring Settings Table: {e}")
+
+def updatePrivacyThresholdTable(self, appID: int, maxKeystrokesPerMin: Optional[int] = None,
+                               maxScreenAccessPerHour: Optional[int] = None, maxRuntimeMinutes: Optional[int] = None) -> bool:
+    db = getDB()
+    if db.engine is None:
+        print("Database engine is not initialized. Cannot update schema.")
+        return
+    print("Updating Privacy Threshold Table in database schema...")
+    try:
+        with db.engine.connect() as connection:
+            connection.execute("""
+                INSERT INTO privacy_threshold (thresholdID, appID, maxKeystrokesPerMin, maxScreenAccessPerHour, maxRuntimeMinutes, createdAt)
+                VALUES (NULL, ?, ?, ?, ?, datetime('now'))
+                ON CONFLICT(appID) DO UPDATE SET
+                maxKeystrokesPerMin = excluded.maxKeystrokesPerMin, 
+                maxScreenAccessPerHour = excluded.maxScreenAccessPerHour,
+                maxRuntimeMinutes = excluded.maxRuntimeMinutes,
+                createdAt = datetime('now')
+                """, (appID, maxKeystrokesPerMin, maxScreenAccessPerHour, maxRuntimeMinutes)
+            )
+            connection.commit()
+        print("Privacy Threshold Table updated successfully.")
+    except Exception as e:
+        print(f"Error updating Privacy Threshold Table: {e}")
+
+def updateReportTable(self, user_id:str, report_type:str, file_path:str) -> bool:
+    db = getDB()
+    if db.engine is None:
+        print("Database engine is not initialized. Cannot update schema.")
+        return
+    print("Updating Report Table in database schema...")
+    try:
+        with db.engine.connect() as connection:
+            connection.execute("""
+                INSERT INTO report (userID, reportType, filePath, generatedAt)
+                VALUES (?, ?, ?, datetime('now'))
+                ON CONFLICT(userID) DO UPDATE SET
+                reportType = excluded.reportType,
+                filePath = excluded.filePath,
+                generatedAt = datetime('now')
+                """, (user_id, report_type, file_path)
+            )
+            connection.commit()
+        print("Report Table updated successfully.")
+    except Exception as e:
+        print(f"Error updating Report Table: {e}")
+
+def updateActivityLogTable(self, userID: str, appID: int, action: str, category: Optional[str] = None,
+                          reason: Optional[str] = None, duration: Optional[int] = None) -> bool:
+    db = getDB()
+    if db.engine is None:
+        print("Database engine is not initialized. Cannot update schema.")
+        return
+    print("Updating Activity Log Table in database schema...")
+    try:
+        with db.engine.connect() as connection:
+            connection.execute("""
+                INSERT INTO activity_log (userID, appID, action, category, reason, duration)
+                VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(userID, appID, timestamp) DO UPDATE SET
+                    action = excluded.action,
+                    category = excluded.category,
+                    reason = excluded.reason,
+                    duration = excluded.duration
+                    """, (userID, appID, action, category, reason, duration)
+            )
+            connection.commit()
+            print("Activity Log Table updated successfully.")
+    except Exception as e:
+        print(f"Error updating Activity Log Table: {e}")
+
+def updateKeystrokeSummaryTable(self, eventID: int, intervalStart: str, intervalEnd: str, keyCount: int,
+                               keysPerMinute: Optional[int] = None, keyCategories: Optional[str] = None,
+                               idleSeconds: int = 0) -> bool:
+    db = getDB()
+    if db.engine is None:
+        print("Database engine is not initialized. Cannot update schema.")
+        return
+    print("Updating Keystroke Summary Table in database schema...")
+    try:        
+        with db.engine.connect() as connection:
+            connection.execute("""
+                INSERT INTO keystroke_summary (eventID, intervalStart, intervalEnd, keyCount, keysPerMinute, keyCategories, idleSeconds)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(eventID) DO UPDATE SET
+                    intervalStart = excluded.intervalStart,
+                    intervalEnd = excluded.intervalEnd,
+                    keyCount = excluded.keyCount,
+                    keysPerMinute = excluded.keysPerMinute,
+                    keyCategories = excluded.keyCategories,
+                    idleSeconds = excluded.idleSeconds
+                    """, (eventID, intervalStart, intervalEnd, keyCount, keysPerMinute, keyCategories, idleSeconds)
+            )
+            connection.commit()
+            print("Keystroke Summary Table updated successfully.")
+    except Exception as e:
+        print(f"Error updating Keystroke Summary Table: {e}")
+
+def updateAlertTable(self, userID: str, appID: int, thresholdID: int, alertType: str, severity: str,
+                     dismissed: Optional[str] = None, resolved: bool = False) -> bool:
+    db = getDB()
+    if db.engine is None:
+        print("Database engine is not initialized. Cannot update schema.")
+        return
+    print("Updating Alert Table in database schema...")
+    try:
+        with db.engine.connect() as connection:
+            connection.execute("""
+                INSERT INTO alert (userID, appID, thresholdID, alertType, severity, dismissed, resolved)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(alertID) DO UPDATE SET
+                    userID = excluded.userID,
+                    appID = excluded.appID,
+                    thresholdID = excluded.thresholdID,
+                    alertType = excluded.alertType,
+                    severity = excluded.severity,
+                    dismissed = excluded.dismissed,
+                    resolved = excluded.resolved
+                    """, (userID, appID, thresholdID, alertType, severity, dismissed, resolved)
+            )
+            connection.commit()
+            print("Alert Table updated successfully.")
+    except Exception as e:
+        print(f"Error updating Alert Table: {e}")
+            
+#global instance
+spyglassDB: Optional[DatabaseManager] = None
