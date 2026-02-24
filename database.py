@@ -10,9 +10,10 @@ except ImportError:
     import sqlite3
 
 from sqlalchemy import create_engine, event
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlachemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker, Session
-
+engine = create_engine('sqlite:///spyglass.db', connect_args={'check_same_thread': False})
 class DatabaseManager:
     # Manage Spyglass database
     def __init__(self, db_path: str = "spyglass.db"):

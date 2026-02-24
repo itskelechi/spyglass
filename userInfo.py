@@ -208,9 +208,9 @@ class UserInfo:
     
     def print_summary(self) -> None:
         # Print a summary of device information# 
-        print("\n" + "*"*60)
+        print("\n" + "="*60)
         print("DEVICE INFORMATION SUMMARY".center(60))
-        print("*"*60)
+        print("="*60)
         
         sys_info = self.info.get("system", {})
         print(f"\nSystem:")
@@ -232,7 +232,7 @@ class UserInfo:
         print(f"\nProcessor:")
         print(f"  CPU Usage: {proc_info.get('cpu_percent')}%")
         
-        print("\n" + "*"*60 + "\n")
+        print("\n" + "="*60 + "\n")
 
 
 # Quick import for common systems

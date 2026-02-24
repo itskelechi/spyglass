@@ -110,9 +110,9 @@ class ConfigSettings:
     
     def print_settings(self) -> None:
         # Print current settings
-        print("\n" + "*"*60)
+        print("\n" + "="*60)
         print("CURRENT MONITORING SETTINGS".center(60))
-        print("*"*60)
+        print("="*60)
         print(f"\nMonitoring Level: {self.config.get('monitoring_level', 'NOT SET')}")
         print(f"\nEnabled Features:")
         print(f"  • Keystroke Logging:      {'ENABLED' if self.config.get('keystroke_logging_enabled') else 'DISABLED'}")
@@ -125,7 +125,7 @@ class ConfigSettings:
         print(f"\nStorage & Security:")
         print(f"  • Max Storage:            {self.config.get('max_storage_mb', 1000)} MB")
         print(f"  • Database Encryption:    {'ENABLED' if self.config.get('database_encryption') else 'DISABLED'}")
-        print("\n" + "*"*60 + "\n")
+        print("\n" + "="*60 + "\n")
 
 
 def create_config(monitoring_level: str) -> ConfigSettings:

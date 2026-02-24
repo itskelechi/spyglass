@@ -22,9 +22,9 @@ class SpyglassInitializer:
     
     def initialize(self) -> bool:
         # Run full initialization sequence# 
-        print("*"*60)
+        print("="*60)
         print("SPYGLASS APPLICATION INITIALIZATION".center(60))
-        print("*"*60)
+        print("="*60)
         
         # Step 1: Request admin privileges
         print("\n[Step 1/4] Checking Administrator Privileges...")
@@ -50,9 +50,9 @@ class SpyglassInitializer:
             print("ERROR: Failed to store device information.")
             return False
         
-        print("\n" + "*"*60)
+        print("\n" + "="*60)
         print("INITIALIZATION SUCCESSFUL".center(60))
-        print("*"*60 + "\n")
+        print("="*60 + "\n")
         
         return True
     

@@ -18,9 +18,9 @@ class ConsentScreen:
         # Display consent screen and get user acknowledgment# 
         self.clear_screen()
         
-        print("*" * 70)
+        print("=" * 70)
         print("SPYGLASS - USER CONSENT & MONITORING AGREEMENT".center(70))
-        print("*" * 70)
+        print("=" * 70)
         print()
         print("""
 ╔════════════════════════════════════════════════════════════════════╗
@@ -94,9 +94,9 @@ monitoring activities described above.
     def show_confirmation(self, level: str) -> None:
         # Show confirmation of consent choice# 
         self.clear_screen()
-        print("*" * 70)
+        print("=" * 70)
         print("CONSENT CONFIRMED".center(70))
-        print("*" * 70)
+        print("=" * 70)
         print(f"\nYou have selected {level} monitoring level.")
         print("\nThe following activities will be monitored:")
         
@@ -125,9 +125,9 @@ monitoring activities described above.
     def show_denial(self) -> None:
         # Show denial message# 
         self.clear_screen()
-        print("*" * 70)
+        print("=" * 70)
         print("CONSENT DECLINED".center(70))
-        print("*" * 70)
+        print("=" * 70)
         print(""" 
             You have declined the monitoring consent.
 

@@ -1,6 +1,6 @@
 # 
-Database Encryption Utilities
-Provides encryption and decryption functions for database security
+#Database Encryption Utilities
+# Provides encryption and decryption functions for database security
 # 
 
 import os

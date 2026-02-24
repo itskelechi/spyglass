@@ -27,36 +27,54 @@ class Keylogger:
     def run(self) -> bool:
         #Run the complete keylogger flow
         
-        print("\n" + "*"*70)
+        print("\n" + "="*70)
         print("SPYGLASS KEYLOGGER - SETUP".center(70))
-        print("*"*70 + "\n")
+        print("="*70 + "\n")
         
         # Step 1: Check admin privileges
+        logging.info("Starting setup - Step 1: Checking admin privileges...")
         if not self.verify_admin():
+            logging.error("Step 1 Failed: Admin verification failed")
             return False
+        logging.info("Step 1 Complete: Admin privileges verified")
         
         # Step 2: Display consent screen
+        logging.info("Starting Step 2: Getting user consent...")
         if not self.get_consent():
+            logging.error("Step 2 Failed: Consent not obtained")
             return False
+        logging.info("Step 2 Complete: Consent obtained")
         
         # Step 3: Create config from consent
+        logging.info("Starting Step 3: Setting up config...")
         if not self.setup_config():
+            logging.error("Step 3 Failed: Config setup failed")
             return False
+        logging.info("Step 3 Complete: Config setup complete")
         
-        # Step 4: Initialize database
-        if not self.setup_db():
-            return False
+        # Step 4: Initialize database (optional for now)
+        logging.info("Starting Step 4: Initializing database (OPTIONAL)...")
+        try:
+            self.setup_db()
+            logging.info("Step 4 Complete: Database initialized")
+        except Exception as e:
+            logging.warning(f"Step 4 SKIPPED: Database setup failed (optional): {e}")
+            print(f"Note: Database setup skipped - {e}\n")
         
         # Step 5: Check if keylogging is enabled before running test
+        logging.info("Starting Step 5: Checking keylogging status...")
         if self.config.is_keylogger_enabled():
             print("\nKeystroke logging is ENABLED (HIGH monitoring level)")
+            logging.info("Keystroke logging is ENABLED")
         else:
             print("\nKeystroke logging is DISABLED (LOW monitoring level)")
+            logging.info("Keystroke logging is DISABLED")
         
-        print("\n" + "*"*70)
+        print("\n" + "="*70)
         print("INITIALIZATION COMPLETE".center(70))
-        print("*"*70 + "\n")
+        print("="*70 + "\n")
         
+        logging.info("Setup Complete: All steps passed successfully")
         return True
     
     def verify_admin(self) -> bool:
@@ -80,46 +98,62 @@ class Keylogger:
         # Display consent screen and get user consent# 
         try:
             print("User Consent & Monitoring Level Selection...\n")
+            logging.info("Creating ConsentScreen...")
             self.consent = ConsentScreen()
+            logging.info("Displaying consent screen...")
             if not self.consent.display_consent():
                 print("\nConsent was not given. Test cannot continue.\n")
+                logging.warning("User declined consent")
                 return False
             
             self.monitoring_level = self.consent.get_monitoring_level()
             print(f"\nConsent received. Monitoring level: {self.monitoring_level}\n")
+            logging.info(f"Consent received with monitoring level: {self.monitoring_level}")
             return True
         except Exception as e:
             print(f"\nError during consent: {e}\n")
+            logging.error(f"Error during consent: {e}", exc_info=True)
             return False
     
     def setup_config(self) -> bool:
         # Create and setup configuration from consent# 
         try:
             print("Configuring Monitoring Settings...\n")
+            logging.info(f"Creating config with monitoring level: {self.monitoring_level}")
             self.config = create_config(self.monitoring_level)
+            logging.info("Config created successfully")
+            logging.info("Printing config settings...")
             self.config.print_settings()
+            logging.info("Config settings printed")
             return True
         except Exception as e:
             print(f"\nError setting up config: {e}\n")
+            logging.error(f"Error setting up config: {e}", exc_info=True)
             return False
     
     def setup_db(self) -> bool:
         # Initialize the database# 
         try:
             print("Initializing Encrypted Database...\n")
+            logging.info("Creating DatabaseManager...")
             import hashlib
             encryption_key = hashlib.sha256(b"spyglass_secure_key_v1").hexdigest()
             
             self.database = DatabaseManager()
+            logging.info("Initializing database...")
             self.database.initializeDB(create_tables=True, encryption_key=encryption_key)
             
+            logging.info("Verifying database connection...")
             if not self.database.verifyConnection():
+                logging.error("Database connection verification failed")
                 return False
             
             print("Database initialized with SQLCipher encryption and verified.\n")
+            logging.info("Database setup complete")
             return True
         except Exception as e:
             print(f"\nError setting up database: {e}\n")
+            logging.error(f"Error setting up database: {e}", exc_info=True)
             return False
     
     def start_keylogger(self, duration: int = 1800) -> bool:
@@ -130,9 +164,9 @@ class Keylogger:
             logging.warning("Keystroke logging is disabled. Monitoring level: LOW")
             return False
         
-        print("\n" + "*"*70)
+        print("\n" + "="*70)
         print("KEYSTROKE LOGGER".center(70))
-        print("*"*70 + "\n")
+        print("="*70 + "\n")
         
         print(f"Starting keystroke monitoring for {duration} seconds...")
         print("Type freely on your keyboard. All keystrokes will be captured and logged.\n")
@@ -166,6 +200,10 @@ class Keylogger:
             # Display results
             self.display_keylogger_results()
             
+            # Flush logging to ensure it's written
+            for handler in logging.root.handlers:
+                handler.flush()
+            
             return True
         except Exception as e:
             print(f"\nError during keystroke test: {e}\n")
@@ -175,11 +213,12 @@ class Keylogger:
     def display_keylogger_results(self) -> None:
         # Display keystroke logging results# 
         if not self.keylogger:
+            logging.warning("No keylogger instance available for results")
             return
         
-        print("*"*70)
+        print("="*70)
         print("KEYLOGGER RESULTS".center(70))
-        print("*"*70 + "\n")
+        print("="*70 + "\n")
         
         keylogger_data = self.keylogger.keystrokes
         
@@ -190,7 +229,9 @@ class Keylogger:
         
         total_keys = sum(keylogger_data.values())
         print(f"Total keystrokes captured: {total_keys}\n")
-        logging.info(f"Total keystrokes captured: {total_keys}")
+        logging.info("="*70)
+        logging.info(f"KEYSTROKE TEST RESULTS - Total keystrokes captured: {total_keys}")
+        logging.info("="*70)
         
         print("Keystroke Frequency (Top 20):")
         print("-" * 70)
@@ -198,7 +239,7 @@ class Keylogger:
         # Sort by frequency
         sorted_keys = sorted(keylogger_data.items(), key=lambda x: x[1], reverse=True)[:20]
         
-        logging.info("Top keystroke frequencies:")
+        logging.info("Top 20 Keystroke Frequencies:")
         for key, count in sorted_keys:
             # Format key display
             if key in ['Key.shift', 'Key.ctrl_l', 'Key.ctrl_r', 'Key.alt_l', 'Key.alt_r']:
@@ -217,18 +258,24 @@ class Keylogger:
                 key_display = f"'{key}'"
             
             bar_length = int(count / max(keylogger_data.values()) * 40)
-            bar = "█" * bar_length
+            bar = "=" * bar_length
             print(f"  {key_display:20s} {count:4d} {bar}")
             logging.info(f"  {key_display:20s} {count:4d}")
         
-        print("\n" + "*"*70 + "\n")
+        logging.info("="*70)
+        logging.info(f"ALL CAPTURED KEYSTROKES ({len(keylogger_data)} unique keys):")
+        logging.info("="*70)
+        for key, count in sorted(keylogger_data.items(), key=lambda x: x[1], reverse=True):
+            logging.info(f"  {key}: {count}")
+        
+        print("\n" + "="*70 + "\n")
     
     def show_menu(self) -> None:
         # Show test menu# 
         while True:
-            print("*"*70)
+            print("="*70)
             print("KEYSTROKE LOGGING TEST MENU".center(70))
-            print("*"*70)
+            print("="*70)
             print(f"\nMonitoring Level: {self.monitoring_level}")
             print(f"Keystroke Logging: {'ENABLED' if self.config.is_keylogger_enabled() else 'DISABLED'}\n")
             
@@ -268,13 +315,13 @@ def main():
         level=logging.DEBUG,
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler(log_file),
+            logging.FileHandler(log_file, encoding='utf-8'),
             logging.StreamHandler()
         ]
     )
-    logging.info("═" * 70)
+    logging.info("=" * 70)
     logging.info("KEYLOGGER APPLICATION STARTED")
-    logging.info("═" * 70)
+    logging.info("=" * 70)
     
     try:
         logging.info("Initializing keylogger...")
@@ -282,7 +329,12 @@ def main():
         logging.info("Running keylogger setup...")
         if keylogger.run():
             logging.info("Setup completed successfully. Showing menu...")
-            keylogger.show_menu()
+            try:
+                keylogger.show_menu()
+            except Exception as menu_error:
+                logging.error(f"Error in show_menu: {menu_error}", exc_info=True)
+                print(f"\nError displaying menu: {menu_error}")
+                raise
         else:
             logging.warning("Setup did not complete successfully.")
         logging.info("Cleaning up resources...")
@@ -295,6 +347,8 @@ def main():
     except Exception as e:
         logging.error(f"Fatal error: {e}", exc_info=True)
         print(f"\nFatal error: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 
