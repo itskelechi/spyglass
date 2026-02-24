@@ -156,7 +156,7 @@ class Keylogger:
             logging.error(f"Error setting up database: {e}", exc_info=True)
             return False
     
-    def start_keylogger(self, duration: int = 1800) -> bool:
+    def start_keylogger(self, duration: int = 180) -> bool:
         # Start keystroke logging# 
         if not self.config.is_keylogger_enabled():
             print("\nKeystroke logging is not enabled.\n Monitoring Level: LOW")
@@ -279,17 +279,17 @@ class Keylogger:
             print(f"\nMonitoring Level: {self.monitoring_level}")
             print(f"Keystroke Logging: {'ENABLED' if self.config.is_keylogger_enabled() else 'DISABLED'}\n")
             
-            print("1. Start Keystroke Test (30 seconds)")
-            print("2. Start Keystroke Test (60 seconds)")
+            print("1. Start Keystroke Test (180 seconds)")
+            print("2. Start Keystroke Test (360 seconds)")
             print("3. Show Current Settings")
             print("4. Exit Test\n")
             
             choice = input("Select option (1-4): ").strip()
             
             if choice == '1':
-                self.start_keylogger(1800) #30 minutes
+                self.start_keylogger(180) #180 seconds
             elif choice == '2':
-                self.start_keylogger(3600) #60 minutes
+                self.start_keylogger(360) #360 seconds
             elif choice == '3':
                 self.config.print_settings()
             elif choice == '4':

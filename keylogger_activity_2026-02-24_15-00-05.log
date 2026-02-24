@@ -30,3 +30,5 @@
 2026-02-24 15:00:09,010 - INFO - Setup completed successfully. Showing menu...
 2026-02-24 15:00:27,526 - INFO - Starting keystroke monitoring for 1800 seconds
 2026-02-24 15:00:27,555 - INFO - Keystroke monitoring successfully started
+2026-02-24 17:14:59,456 - INFO - Keystroke monitoring stopped
+2026-02-24 17:14:59,458 - WARNING - No keystrokes recorded during the test period
