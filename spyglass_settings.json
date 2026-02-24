@@ -1,0 +1,11 @@
+{
+  "monitoring_level": "HIGH",
+  "keystroke_logging_enabled": true,
+  "app_monitoring_enabled": true,
+  "screenshot_interval": 0,
+  "video_recording_enabled": false,
+  "max_storage_mb": 1000,
+  "debug_logging": false,
+  "auto_backup_enabled": false,
+  "database_encryption": true
+}

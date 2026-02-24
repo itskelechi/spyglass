@@ -115,16 +115,16 @@ class ConfigSettings:
         print("*"*60)
         print(f"\nMonitoring Level: {self.config.get('monitoring_level', 'NOT SET')}")
         print(f"\nEnabled Features:")
-        print(f"  • Keystroke Logging:      {'ENABLED' if self.config.get('keystroke_logging_enabled') else '✗ DISABLED'}")
-        print(f"  • App Monitoring:         {'ENABLED' if self.config.get('app_monitoring_enabled') else '✗ DISABLED'}")
-        print(f"  • Screenshot Capture:     {'ENABLED' if self.config.get('screenshot_interval', 0) > 0 else '✗ DISABLED'}")
-        print(f"  • Video Recording:        {'ENABLED' if self.config.get('video_recording_enabled') else '✗ DISABLED'}")
-        print(f"  • Auto Backup:            {'ENABLED' if self.config.get('auto_backup_enabled') else '✗ DISABLED'}")
-        print(f"  • Debug Logging:          {'ENABLED' if self.config.get('debug_logging') else '✗ DISABLED'}")
+        print(f"  • Keystroke Logging:      {'ENABLED' if self.config.get('keystroke_logging_enabled') else 'DISABLED'}")
+        print(f"  • App Monitoring:         {'ENABLED' if self.config.get('app_monitoring_enabled') else 'DISABLED'}")
+        print(f"  • Screenshot Capture:     {'ENABLED' if self.config.get('screenshot_interval', 0) > 0 else 'DISABLED'}")
+        print(f"  • Video Recording:        {'ENABLED' if self.config.get('video_recording_enabled') else 'DISABLED'}")
+        print(f"  • Auto Backup:            {'ENABLED' if self.config.get('auto_backup_enabled') else 'DISABLED'}")
+        print(f"  • Debug Logging:          {'ENABLED' if self.config.get('debug_logging') else 'DISABLED'}")
         
         print(f"\nStorage & Security:")
         print(f"  • Max Storage:            {self.config.get('max_storage_mb', 1000)} MB")
-        print(f"  • Database Encryption:    {'ENABLED' if self.config.get('database_encryption') else '✗ DISABLED'}")
+        print(f"  • Database Encryption:    {'ENABLED' if self.config.get('database_encryption') else 'DISABLED'}")
         print("\n" + "*"*60 + "\n")
 
 
