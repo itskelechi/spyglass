@@ -4,7 +4,7 @@ import datetime
 from typing import Dict, Any, Optional
 import os
 import logging
-from pynput import keyboard
+#from pynput import keyboard
 
 from consent import ConsentScreen
 from configSettings import create_config, ConfigSettings
@@ -32,37 +32,37 @@ class Keylogger:
         print("="*70 + "\n")
         
         # Step 1: Check admin privileges
-        logging.info("Starting setup - Step 1: Checking admin privileges...")
+        logging.info("Starting setup - Checking admin privileges...")
         if not self.verify_admin():
             logging.error("Step 1 Failed: Admin verification failed")
             return False
-        logging.info("Step 1 Complete: Admin privileges verified")
+        logging.info("Admin privileges verified")
         
         # Step 2: Display consent screen
-        logging.info("Starting Step 2: Getting user consent...")
+        logging.info("Starting Get user consent...")
         if not self.get_consent():
             logging.error("Step 2 Failed: Consent not obtained")
             return False
-        logging.info("Step 2 Complete: Consent obtained")
+        logging.info("Consent obtained")
         
         # Step 3: Create config from consent
-        logging.info("Starting Step 3: Setting up config...")
+        logging.info("Starting Set up config...")
         if not self.setup_config():
-            logging.error("Step 3 Failed: Config setup failed")
+            logging.error("Config setup failed")
             return False
-        logging.info("Step 3 Complete: Config setup complete")
+        logging.info("Config setup complete")
         
         # Step 4: Initialize database (optional for now)
-        logging.info("Starting Step 4: Initializing database (OPTIONAL)...")
+        logging.info("Starting Initializing database...")
         try:
             self.setup_db()
-            logging.info("Step 4 Complete: Database initialized")
+            logging.info("Database initialized")
         except Exception as e:
-            logging.warning(f"Step 4 SKIPPED: Database setup failed (optional): {e}")
+            logging.warning(f" Database setup failed: {e}")
             print(f"Note: Database setup skipped - {e}\n")
         
         # Step 5: Check if keylogging is enabled before running test
-        logging.info("Starting Step 5: Checking keylogging status...")
+        logging.info("Starting keylogging status check...")
         if self.config.is_keylogger_enabled():
             print("\nKeystroke logging is ENABLED (HIGH monitoring level)")
             logging.info("Keystroke logging is ENABLED")
@@ -74,13 +74,13 @@ class Keylogger:
         print("INITIALIZATION COMPLETE".center(70))
         print("="*70 + "\n")
         
-        logging.info("Setup Complete: All steps passed successfully")
+        logging.info("Setup Completed successfully")
         return True
     
     def verify_admin(self) -> bool:
         # Check and request admin privileges
         try:
-            logging.info("Checking administrator privileges...")
+            logging.info("Checking admin privileges...")
             # Request admin if not already running as admin
             AdminHandler.check_and_request_admin()
             
@@ -189,8 +189,18 @@ class Keylogger:
                 sys.stdout.write(f"\r⏱  Remaining time: {remaining:2d} seconds")
                 sys.stdout.flush()
                 time.sleep(1)
+                
+                # Debug: Check if keystrokes are being captured
+                if remaining % 10 == 0:
+                    with self.keylogger.lock:
+                        logging.debug(f"DEBUG: Current keystroke count: {len(self.keylogger.keystrokes)} keys, Last key: {self.keylogger.last_key}")
             
             sys.stdout.write("\r" + " " * 40 + "\r")  # Clear the line
+            
+            # Final debug before stopping
+            with self.keylogger.lock:
+                logging.info(f"DEBUG: Final keystroke count before stop: {len(self.keylogger.keystrokes)} keys")
+                logging.info(f"DEBUG: Keystroke data: {self.keylogger.keystrokes}")
             
             self.keylogger.stopLog()
             logging.info("Keystroke monitoring stopped")
@@ -204,6 +214,11 @@ class Keylogger:
             for handler in logging.root.handlers:
                 handler.flush()
             
+            # Flush keystroke logger
+            keystroke_logger = logging.getLogger('keystrokes')
+            for handler in keystroke_logger.handlers:
+                handler.flush()
+            
             return True
         except Exception as e:
             print(f"\nError during keystroke test: {e}\n")
@@ -212,6 +227,8 @@ class Keylogger:
     
     def display_keylogger_results(self) -> None:
         # Display keystroke logging results# 
+        keystroke_logger = logging.getLogger('keystrokes')
+        
         if not self.keylogger:
             logging.warning("No keylogger instance available for results")
             return
@@ -221,17 +238,22 @@ class Keylogger:
         print("="*70 + "\n")
         
         keylogger_data = self.keylogger.keystrokes
+        logging.info(f"DEBUG: keylogger_data = {keylogger_data}")
+        logging.info(f"DEBUG: keylogger_data type = {type(keylogger_data)}")
+        logging.info(f"DEBUG: keylogger_data length = {len(keylogger_data)}")
         
         if not keylogger_data:
             print("No keystrokes were recorded during the test period.\n")
             logging.warning("No keystrokes recorded during the test period")
+            keystroke_logger.warning("No keystrokes recorded during the test period")
             return
         
         total_keys = sum(keylogger_data.values())
         print(f"Total keystrokes captured: {total_keys}\n")
-        logging.info("="*70)
-        logging.info(f"KEYSTROKE TEST RESULTS - Total keystrokes captured: {total_keys}")
-        logging.info("="*70)
+        
+        keystroke_logger.info("="*70)
+        keystroke_logger.info(f"KEYSTROKE TEST RESULTS - Total keystrokes captured: {total_keys}")
+        keystroke_logger.info("="*70)
         
         print("Keystroke Frequency (Top 20):")
         print("-" * 70)
@@ -239,7 +261,7 @@ class Keylogger:
         # Sort by frequency
         sorted_keys = sorted(keylogger_data.items(), key=lambda x: x[1], reverse=True)[:20]
         
-        logging.info("Top 20 Keystroke Frequencies:")
+        keystroke_logger.info("Top 20 Keystroke Frequencies:")
         for key, count in sorted_keys:
             # Format key display
             if key in ['Key.shift', 'Key.ctrl_l', 'Key.ctrl_r', 'Key.alt_l', 'Key.alt_r']:
@@ -260,13 +282,13 @@ class Keylogger:
             bar_length = int(count / max(keylogger_data.values()) * 40)
             bar = "=" * bar_length
             print(f"  {key_display:20s} {count:4d} {bar}")
-            logging.info(f"  {key_display:20s} {count:4d}")
+            keystroke_logger.info(f"  {key_display:20s} {count:4d}")
         
-        logging.info("="*70)
-        logging.info(f"ALL CAPTURED KEYSTROKES ({len(keylogger_data)} unique keys):")
-        logging.info("="*70)
+        keystroke_logger.info("="*70)
+        keystroke_logger.info(f"ALL CAPTURED KEYSTROKES ({len(keylogger_data)} unique keys):")
+        keystroke_logger.info("="*70)
         for key, count in sorted(keylogger_data.items(), key=lambda x: x[1], reverse=True):
-            logging.info(f"  {key}: {count}")
+            keystroke_logger.info(f"  {key}: {count}")
         
         print("\n" + "="*70 + "\n")
     
@@ -279,17 +301,17 @@ class Keylogger:
             print(f"\nMonitoring Level: {self.monitoring_level}")
             print(f"Keystroke Logging: {'ENABLED' if self.config.is_keylogger_enabled() else 'DISABLED'}\n")
             
-            print("1. Start Keystroke Test (180 seconds)")
-            print("2. Start Keystroke Test (360 seconds)")
+            print("1. Start Keystroke Test (30 seconds)")
+            print("2. Start Keystroke Test (60 seconds)")
             print("3. Show Current Settings")
             print("4. Exit Test\n")
             
             choice = input("Select option (1-4): ").strip()
             
             if choice == '1':
-                self.start_keylogger(180) #180 seconds
+                self.start_keylogger(30)  # 30 seconds
             elif choice == '2':
-                self.start_keylogger(360) #360 seconds
+                self.start_keylogger(60)  # 60 seconds
             elif choice == '3':
                 self.config.print_settings()
             elif choice == '4':
@@ -311,17 +333,43 @@ def main():
     # Setup file logging with timestamp
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     log_file = os.path.join(os.path.dirname(__file__), f'keylogger_activity_{timestamp}.log')
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file, encoding='utf-8'),
-            logging.StreamHandler()
-        ]
-    )
+    keystroke_log_file = os.path.join(os.path.dirname(__file__), f'keystrokes_{timestamp}.log')
+    
+    # Create separate loggers for application activity and keystroke data
+    app_logger = logging.getLogger('app')
+    app_logger.setLevel(logging.DEBUG)
+    
+    keystroke_logger = logging.getLogger('keystrokes')
+    keystroke_logger.setLevel(logging.INFO)
+    
+    # Formatter
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    
+    # App logger handlers (application activity)
+    app_file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    app_file_handler.setFormatter(formatter)
+    app_logger.addHandler(app_file_handler)
+    
+    app_console_handler = logging.StreamHandler()
+    app_console_handler.setFormatter(formatter)
+    app_logger.addHandler(app_console_handler)
+    
+    # Keystroke logger handlers (keystroke data only)
+    keystroke_file_handler = logging.FileHandler(keystroke_log_file, encoding='utf-8')
+    keystroke_file_handler.setFormatter(formatter)
+    keystroke_logger.addHandler(keystroke_file_handler)
+    
+    # Set root logger to use app logger handlers
+    logging.root.handlers = []
+    logging.root.addHandler(app_file_handler)
+    logging.root.addHandler(app_console_handler)
+    logging.root.setLevel(logging.DEBUG)
+    
     logging.info("=" * 70)
     logging.info("KEYLOGGER APPLICATION STARTED")
     logging.info("=" * 70)
+    logging.info(f"Application log: {log_file}")
+    logging.info(f"Keystroke log: {keystroke_log_file}")
     
     try:
         logging.info("Initializing keylogger...")
@@ -354,8 +402,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-

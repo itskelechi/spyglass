@@ -1,4 +1,3 @@
-
 # SPYGLASS - SETUP GUIDE
 ==============================================
 
@@ -110,8 +109,13 @@ Fix: Run 'pip install -r requirements.txt' again
 Issue: "This application requires administrator privileges"
 Fix: Run Command Prompt as Administrator, then run test
 
-Issue: "Database is locked" error
-Fix: Close all app instances, delete spyglass.db, restart
+Issue: "Database is locked" or "no such table: main.event" error
+Fix: 
+  1. Close VS Code and all running instances
+  2. Right-click PowerShell and select "Run as administrator"
+  3. Run: `taskkill /IM python.exe /F`
+  4. Run: `Remove-Item "spyglass.db" -Force`
+  5. Restart the application to recreate the database
 
 Issue: Keystroke test not capturing keystrokes
 Fix: Make sure you selected HIGH monitoring level

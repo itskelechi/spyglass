@@ -4,6 +4,8 @@ from pynput import keyboard
 from typing import Dict, Optional
 import threading
 
+### Keystroke Monitor Class - for App
+
 class KeystrokeMonitor:
     #Monitor keystrokes
     
