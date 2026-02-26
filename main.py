@@ -10,7 +10,7 @@ def main():
     # Main entry point# 
     print(""" 
 ╔════════════════════════════════════════════════════════════════╗
-║                      SPYGLASS APPLICATION                     ║
+║                      SPYGLASS APPLICATION                      ║
 ╚════════════════════════════════════════════════════════════════╝
 
 For keystroke logging testing and setup, please run:

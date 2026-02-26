@@ -74,7 +74,7 @@ class DatabaseManager:
                     processor      TEXT    NOT NULL,
                     createdAt     TEXT    NOT NULL DEFAULT (datetime('now')),
 
-                    CONSTRAINT uq_userID UNIQUE (userID)
+                    CONSTRAINT uq_user_id UNIQUE (userID)
                     );
 
                     -- -------------------------
@@ -181,7 +181,7 @@ class DatabaseManager:
                     idleSeconds     INTEGER NOT NULL DEFAULT 0,
 
                     CONSTRAINT fk_keystroke_event
-                        FOREIGN KEY (eventID) REFERENCES event(eventID)
+                        FOREIGN KEY (eventID) REFERENCES activity_log(eventID)
                         ON DELETE CASCADE ON UPDATE CASCADE
                     );
 
@@ -195,7 +195,7 @@ class DatabaseManager:
                     capturedAt    TEXT    NOT NULL DEFAULT (datetime('now')),
 
                     CONSTRAINT fk_screenshot_event
-                        FOREIGN KEY (eventID) REFERENCES event(eventID)
+                        FOREIGN KEY (eventID) REFERENCES activity_log(eventID)
                         ON DELETE CASCADE ON UPDATE CASCADE
                     );
 
@@ -209,7 +209,7 @@ class DatabaseManager:
                     durationSeconds  INTEGER NOT NULL DEFAULT 0,
 
                     CONSTRAINT fk_video_event
-                        FOREIGN KEY (eventID) REFERENCES event(eventID)
+                        FOREIGN KEY (eventID) REFERENCES activity_log(eventID)
                         ON DELETE CASCADE ON UPDATE CASCADE
                     );
 
@@ -253,7 +253,7 @@ class DatabaseManager:
                     ON activity_log (appID, timestamp);
 
                     CREATE INDEX IF NOT EXISTS idx_event_activity_time
-                    ON event (activityID, timestamp);
+                    ON activity_log (eventID, timestamp);
 
                     CREATE INDEX IF NOT EXISTS idx_alert_user_time
                     ON alert (userID, timestamp);
@@ -262,7 +262,7 @@ class DatabaseManager:
                     ON privacy_threshold (appID);
 
                     CREATE INDEX IF NOT EXISTS idx_report_user_time
-                    ON report (userID, generated_at);
+                    ON report (userID, generatedAt);
 
                 """)
             
