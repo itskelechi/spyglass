@@ -14,7 +14,6 @@ from adminHandler import AdminHandler
 
 
 class Keylogger:
-    
     def __init__(self):
         self.adminHandler = None
         self.consent = None
@@ -32,7 +31,7 @@ class Keylogger:
         print("="*70 + "\n")
         
         # Step 1: Check admin privileges
-        logging.info("Starting setup - Checking admin privileges...")
+        logging.info("Starting Keylogger setup - Checking admin privileges...")
         if not self.verify_admin():
             logging.error("Step 1 Failed: Admin verification failed")
             return False
@@ -54,13 +53,11 @@ class Keylogger:
         
         # Step 4: Initialize database (optional for now)
         logging.info("Starting Initializing database...")
-        try:
-            self.setup_db()
-            logging.info("Database initialized")
-        except Exception as e:
-            logging.warning(f" Database setup failed: {e}")
-            print(f"Note: Database setup skipped - {e}\n")
-        
+        if not self.setup_db():
+            logging.error("Step 4 Failed: Database setup failed")
+            return False
+        logging.info("Database initialized successfully")
+
         # Step 5: Check if keylogging is enabled before running test
         logging.info("Starting keylogging status check...")
         if self.config.is_keylogger_enabled():
