@@ -71,8 +71,6 @@ class Spyglass:
         self.keylogger = Keylogger()
         self.app_monitor = AppMonitor()
         self.monitoring_level = self.consent.get_monitoring_level()
-        self.config = create_config(self.monitoring_level)
-        self.database = DatabaseManager()
 
         # Log installed apps to DB
         app_count = self.app_monitor.scan_and_log_installed_apps()
@@ -176,7 +174,7 @@ class Spyglass:
             return False
         
     def start_app_monitoring(self, duration: int = 180) -> bool:
-        """Start application monitoring for specified duration"""
+        #Start application monitoring for specified duration
         if not self.is_running:
             print("Spyglass has not been initialized. Please run setup first.\n")
             return False
@@ -223,7 +221,7 @@ class Spyglass:
             return False
     
     def full_monitoring(self, duration: int = 180) -> bool:
-        """Start both app monitoring and keylogging together (HIGH security only)"""
+        #Start both app monitoring and keylogging together (HIGH security only)
         if not self.is_running:
             print("Spyglass has not been initialized. Please run setup first.\n")
             return False
@@ -352,68 +350,56 @@ class Spyglass:
             
             if self.config.is_keylogger_enabled():
                 print(f"Security Mode: HIGH (App Monitoring + Keystroke Logging)\n")
-                print("1. Start App Monitoring Test (30 seconds)")
-                print("2. Start App Monitoring Test (60 seconds)")
-                print("3. Start Keystroke Logging Test (30 seconds)")
-                print("4. Start Keystroke Logging Test (60 seconds)")
-                print("5. Start Integrated Test - HIGH SECURITY (30 seconds)")
-                print("6. Start Integrated Test - HIGH SECURITY (60 seconds)")
-                print("7. Show Current Settings")
-                print("8. View Installed Apps")
-                print("9. View Running Apps")
-                print("10. Exit Test\n")
+                print("1. Start App Monitoring Test (180 seconds)")
+                print("2. Start Keystroke Logging Test (180 seconds)")
+                print("3. Start Integrated Test - HIGH SECURITY (180 seconds)")
+                print("4. Show Current Settings")
+                print("5. View Installed Apps")
+                print("6. View Running Apps")
+                print("7. Exit Test\n")
                 
-                choice = input("Select option (1-10): ").strip()
+                choice = input("Select option (1-7): ").strip()
                 
                 if choice == '1':
-                    self.start_app_monitoring(30)
+                    self.start_app_monitoring(180)
                 elif choice == '2':
-                    self.start_app_monitoring(60)
+                    self.start_keylogger(180)
                 elif choice == '3':
-                    self.start_keylogger(30)
+                    self.start_integrated_test(180)
                 elif choice == '4':
-                    self.start_keylogger(60)
-                elif choice == '5':
-                    self.(30)
-                elif choice == '6':
-                    self.(60)
-                elif choice == '7':
                     self.config.print_settings()
-                elif choice == '8':
+                elif choice == '5':
                     self.show_installed_apps()
-                elif choice == '9':
+                elif choice == '6':
                     self.show_running_apps()
-                elif choice == '10':
+                elif choice == '7':
                     print("\nExiting Spyglass test...\n")
                     break
                 else:
-                    print("\nInvalid choice. Please select between 1-10.\n")
+                    print("\nInvalid choice. Please select between 1-7.\n")
             else:
                 print(f"Security Mode: LOW (App Monitoring Only)\n")
-                print("1. Start App Monitoring Test (30 seconds)")
-                print("2. Start App Monitoring Test (60 seconds)")
-                print("3. Show Current Settings")
-                print("4. View Installed Apps")
-                print("5. View Running Apps")
-                print("6. Exit Test\n")
+                print("1. Start App Monitoring Test (180 seconds)")
+                print("2. Show Current Settings")
+                print("3. View Installed Apps")
+                print("4. View Running Apps")
+                print("5. Exit Test\n")
                 
-                choice = input("Select option (1-6): ").strip()
+                choice = input("Select option (1-5): ").strip()
                 
                 if choice == '1':
-                    self.start_app_monitoring(30)
+                    self.start_app_monitoring(180)
                 elif choice == '2':
-                    self.start_app_monitoring(60)
-                elif choice == '3':
                     self.config.print_settings()
-                elif choice == '4':
+                elif choice == '3':
                     self.show_installed_apps()
-                elif choice == '5':
+                elif choice == '4':
                     self.show_running_apps()
-                elif choice == '6':
+                elif choice == '5':
                     print("\nExiting Spyglass test...\n")
                     break
                 else:
-                    print("\nInvalid choice. Please select between 1-6.\n")
+                    print("\nInvalid choice. Please select between 1-5.\n")
     
     def show_installed_apps(self) -> None:
         """Display all installed applications"""
