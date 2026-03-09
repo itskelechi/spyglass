@@ -1,17 +1,10 @@
+import logging
+import datetime
 import sys
 import time
-import datetime
-from typing import Dict, Any, Optional
 import os
-import logging
-#from pynput import keyboard
 
-from consent import ConsentScreen
-from configSettings import create_config, ConfigSettings
-from database import DatabaseManager
 from keystroke_monitor import KeystrokeMonitor
-from adminHandler import AdminHandler
-
 
 class Keylogger:
     def __init__(self):
@@ -25,38 +18,6 @@ class Keylogger:
     
     def run(self) -> bool:
         #Run the complete keylogger flow
-        
-        print("\n" + "="*70)
-        print("SPYGLASS KEYLOGGER - SETUP".center(70))
-        print("="*70 + "\n")
-        
-        # Step 1: Check admin privileges
-        logging.info("Starting Keylogger setup - Checking admin privileges...")
-        if not self.verify_admin():
-            logging.error("Step 1 Failed: Admin verification failed")
-            return False
-        logging.info("Admin privileges verified")
-        
-        # Step 2: Display consent screen
-        logging.info("Starting Get user consent...")
-        if not self.get_consent():
-            logging.error("Step 2 Failed: Consent not obtained")
-            return False
-        logging.info("Consent obtained")
-        
-        # Step 3: Create config from consent
-        logging.info("Starting Set up config...")
-        if not self.setup_config():
-            logging.error("Config setup failed")
-            return False
-        logging.info("Config setup complete")
-        
-        # Step 4: Initialize database (optional for now)
-        logging.info("Starting Initializing database...")
-        if not self.setup_db():
-            logging.error("Step 4 Failed: Database setup failed")
-            return False
-        logging.info("Database initialized successfully")
 
         # Step 5: Check if keylogging is enabled before running test
         logging.info("Starting keylogging status check...")
@@ -74,84 +35,6 @@ class Keylogger:
         logging.info("Setup Completed successfully")
         return True
     
-    def verify_admin(self) -> bool:
-        # Check and request admin privileges
-        try:
-            logging.info("Checking admin privileges...")
-            # Request admin if not already running as admin
-            AdminHandler.check_and_request_admin()
-            
-            # If we get here, we're running as admin
-            print(f"Current privilege level: Admin")
-            print("Administrator privileges confirmed.\n")
-            logging.info("Administrator privileges confirmed")
-            return True
-        except Exception as e:
-            print(f"Error checking admin privileges: {e}\n")
-            logging.error(f"Error checking admin privileges: {e}", exc_info=True)
-            return False
-    
-    def get_consent(self) -> bool:
-        # Display consent screen and get user consent# 
-        try:
-            print("User Consent & Monitoring Level Selection...\n")
-            logging.info("Creating ConsentScreen...")
-            self.consent = ConsentScreen()
-            logging.info("Displaying consent screen...")
-            if not self.consent.display_consent():
-                print("\nConsent was not given. Test cannot continue.\n")
-                logging.warning("User declined consent")
-                return False
-            
-            self.monitoring_level = self.consent.get_monitoring_level()
-            print(f"\nConsent received. Monitoring level: {self.monitoring_level}\n")
-            logging.info(f"Consent received with monitoring level: {self.monitoring_level}")
-            return True
-        except Exception as e:
-            print(f"\nError during consent: {e}\n")
-            logging.error(f"Error during consent: {e}", exc_info=True)
-            return False
-    
-    def setup_config(self) -> bool:
-        # Create and setup configuration from consent# 
-        try:
-            print("Configuring Monitoring Settings...\n")
-            logging.info(f"Creating config with monitoring level: {self.monitoring_level}")
-            self.config = create_config(self.monitoring_level)
-            logging.info("Config created successfully")
-            logging.info("Printing config settings...")
-            self.config.print_settings()
-            logging.info("Config settings printed")
-            return True
-        except Exception as e:
-            print(f"\nError setting up config: {e}\n")
-            logging.error(f"Error setting up config: {e}", exc_info=True)
-            return False
-    
-    def setup_db(self) -> bool:
-        # Initialize the database# 
-        try:
-            print("Initializing Encrypted Database...\n")
-            logging.info("Creating DatabaseManager...")
-            import hashlib
-            encryption_key = hashlib.sha256(b"spyglass_secure_key_v1").hexdigest()
-            
-            self.database = DatabaseManager()
-            logging.info("Initializing database...")
-            self.database.initializeDB(create_tables=True, encryption_key=encryption_key)
-            
-            logging.info("Verifying database connection...")
-            if not self.database.verifyConnection():
-                logging.error("Database connection verification failed")
-                return False
-            
-            print("Database initialized with SQLCipher encryption and verified.\n")
-            logging.info("Database setup complete")
-            return True
-        except Exception as e:
-            print(f"\nError setting up database: {e}\n")
-            logging.error(f"Error setting up database: {e}", exc_info=True)
-            return False
     
     def start_keylogger(self, duration: int = 180) -> bool:
         # Start keystroke logging# 
@@ -289,7 +172,6 @@ class Keylogger:
         
         print("\n" + "="*70 + "\n")
     
-    def show_menu(self) -> None:
         # Show test menu# 
         while True:
             print("="*70)
@@ -317,7 +199,6 @@ class Keylogger:
             else:
                 print("\nInvalid choice. Please select between 1-4.\n")
     
-    def cleanup(self) -> None:
         # Clean up resources# 
         if self.database:
             self.database.closeDB()
@@ -325,77 +206,3 @@ class Keylogger:
             self.keylogger.stopLog()
 
 
-def main():
-    """Main entry point for the keylogger application."""
-    # Setup file logging with timestamp
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_file = os.path.join(os.path.dirname(__file__), f'keylogger_activity_{timestamp}.log')
-    keystroke_log_file = os.path.join(os.path.dirname(__file__), f'keystrokes_{timestamp}.log')
-    
-    # Create separate loggers for application activity and keystroke data
-    app_logger = logging.getLogger('app')
-    app_logger.setLevel(logging.DEBUG)
-    
-    keystroke_logger = logging.getLogger('keystrokes')
-    keystroke_logger.setLevel(logging.INFO)
-    
-    # Formatter
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    
-    # App logger handlers (application activity)
-    app_file_handler = logging.FileHandler(log_file, encoding='utf-8')
-    app_file_handler.setFormatter(formatter)
-    app_logger.addHandler(app_file_handler)
-    
-    app_console_handler = logging.StreamHandler()
-    app_console_handler.setFormatter(formatter)
-    app_logger.addHandler(app_console_handler)
-    
-    # Keystroke logger handlers (keystroke data only)
-    keystroke_file_handler = logging.FileHandler(keystroke_log_file, encoding='utf-8')
-    keystroke_file_handler.setFormatter(formatter)
-    keystroke_logger.addHandler(keystroke_file_handler)
-    
-    # Set root logger to use app logger handlers
-    logging.root.handlers = []
-    logging.root.addHandler(app_file_handler)
-    logging.root.addHandler(app_console_handler)
-    logging.root.setLevel(logging.DEBUG)
-    
-    logging.info("=" * 70)
-    logging.info("KEYLOGGER APPLICATION STARTED")
-    logging.info("=" * 70)
-    logging.info(f"Application log: {log_file}")
-    logging.info(f"Keystroke log: {keystroke_log_file}")
-    
-    try:
-        logging.info("Initializing keylogger...")
-        keylogger = Keylogger()
-        logging.info("Running keylogger setup...")
-        if keylogger.run():
-            logging.info("Setup completed successfully. Showing menu...")
-            try:
-                keylogger.show_menu()
-            except Exception as menu_error:
-                logging.error(f"Error in show_menu: {menu_error}", exc_info=True)
-                print(f"\nError displaying menu: {menu_error}")
-                raise
-        else:
-            logging.warning("Setup did not complete successfully.")
-        logging.info("Cleaning up resources...")
-        keylogger.cleanup()
-        logging.info("Keylogger shutdown completed.")
-    except KeyboardInterrupt:
-        logging.info("Keylogger interrupted by user.")
-        print("\n\nKeylogger interrupted by user.")
-        sys.exit(0)
-    except Exception as e:
-        logging.error(f"Fatal error: {e}", exc_info=True)
-        print(f"\nFatal error: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()

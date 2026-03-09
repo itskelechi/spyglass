@@ -8,8 +8,7 @@ import os
 
 
 class ConsentScreen:
-    # Handle user consent for monitoring activities# 
-    
+    # Handle user consent for monitoring activities
     def __init__(self):
         self.user_consented = False
         self.monitoring_level = None

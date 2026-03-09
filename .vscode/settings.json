@@ -2,12 +2,15 @@
     "cSpell.words": [
         "appmon",
         "autoflush",
+        "executescript",
         "getprocessor",
         "keylogging",
         "psutil",
         "pynput",
         "sessionmaker",
         "sqlalchemy",
-        "sqlcipher"
+        "sqlcipher",
+        "subkey",
+        "sypglass"
     ]
 }

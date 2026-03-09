@@ -22,17 +22,17 @@ This will guide you through:
   2. Monitoring Level Selection (LOW/HIGH)
   3. Configuration Setup
   4. Database Initialization
-  5. Keystroke Logging Tests
+  5. Spyglass Demo (Keylogger and App Monitor)
 
 ═══════════════════════════════════════════════════════════════════
     """)
     
     # Optional: Ask if user wants to run test
-    choice = input("Would you like to start the keystroke logging test? (y/n): ").strip().lower()
+    choice = input("Would you like to start the Spyglass demo? (y/n): ").strip().lower()
     
     if choice == 'y':
         try:
-            from keylogger import main as run_test
+            from spyglass_test import main as run_test
             run_test()
         except Exception as e:
             print(f"Error running test: {e}")
