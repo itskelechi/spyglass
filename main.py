@@ -32,7 +32,7 @@ This will guide you through:
     
     if choice == 'y':
         try:
-            from spyglass_test import main as run_test
+            from spyglass import main as run_test
             run_test()
         except Exception as e:
             print(f"Error running test: {e}")
