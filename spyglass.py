@@ -11,13 +11,14 @@ import datetime
 import os
 from typing import Dict, Any, Optional
 
-from app_monitor import AppMonitor
+from appMonitor import AppMonitor
 from keystroke_monitor import KeystrokeMonitor
-from database import DatabaseManager
+from database import DatabaseManager, updateKeystrokeSummaryTable
 from consent import ConsentScreen
 from adminHandler import AdminHandler
 from keylogger import Keylogger
 from configSettings import create_config, ConfigSettings
+from userInfo import UserInfo
 
 class Spyglass:
     def __init__(self):
@@ -68,8 +69,8 @@ class Spyglass:
         
 
         # system setup
-        self.keylogger = Keylogger()
-        self.app_monitor = AppMonitor()
+        self.keylogger = Keylogger(self)
+        self.app_monitor = AppMonitor(self)
         self.monitoring_level = self.consent.get_monitoring_level()
 
         # Log installed apps to DB
@@ -160,6 +161,14 @@ class Spyglass:
             logging.info("Initializing database...")
             self.database.initializeDB(create_tables=True, encryption_key=encryption_key)
             
+            user_info = UserInfo()
+            device_info = user_info.to_dict()
+            system_info_path = os.path.join(os.path.dirname(__file__), 'system_info.json')
+            user_info.save_to_file(system_info_path)
+            logging.info(f"System information saved to: {system_info_path}")
+
+            self.database.UpdateUserTable(deviceInfo=device_info)
+            
             logging.info("Verifying database connection...")
             if not self.database.verifyConnection():
                 logging.error("Database connection verification failed")
@@ -206,6 +215,7 @@ class Spyglass:
             sys.stdout.write("\r" + " " * 40 + "\r")  # Clear the line
             
             self.app_monitor.stop_monitoring()
+            self.database.Update
             print("\nApp monitoring stopped.\n")
             logging.info("App monitoring stopped")
             return True

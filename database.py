@@ -3,6 +3,8 @@ import sqlite3
 from pathlib import Path
 from typing import Optional
 
+from userInfo import UserInfo
+
 # Import sqlcipher3 as sqlite3 replacement for encrypted databases
 try:
     import sqlcipher3 as sqlite3
@@ -37,7 +39,7 @@ class DatabaseManager:
             if create_tables:
                 self.createAppSchema()
                 print("Database initialized and tables created successfully.")
-            
+                
         except Exception as e:
             print(f"Error initializing database: {e}")
             raise
@@ -301,9 +303,9 @@ class DatabaseManager:
             print("Database connection is not initialized.")
             return False
         try:
-            import json
             sysInfo = deviceInfo.get('system', {})
             hardwareInfo = deviceInfo.get('hardware', {})
+            processorInfo = deviceInfo.get('processor', {})
             
             # Format userSystem as: osType osVersion osBuild
             userSystem = f"{sysInfo.get('os', '')} {sysInfo.get('os_version', '')} (Build {sysInfo.get('os_build', '')})".strip()
@@ -311,10 +313,8 @@ class DatabaseManager:
             username = sysInfo.get('hostname', '')
             # Machine ID
             machineID = hardwareInfo.get('machine_id', '')
-            # Full system info as JSON
-            systemInfo = json.dumps(deviceInfo)
             #getprocessor info
-            processor = hardwareInfo.get('processor', '')
+            processor = processorInfo.get('processor', '')
             # Insert/Update device info into user table
             insert_query = """
                 INSERT OR REPLACE INTO user 
@@ -338,7 +338,7 @@ class DatabaseManager:
             print(f"Error storing device information: {e}")
             return False
     
-    def getUserInfo(self, userID: str) -> Optional[dict]:
+    def displayUserInfo(self, userID: str) -> Optional[dict]:
         """Retrieve device information from the user table"""
         if self.connection is None:
             print("Database connection is not initialized.")
@@ -365,7 +365,7 @@ def getDB() -> DatabaseManager:
     global spyglassDB
     if spyglassDB is None:
         spyglassDB = DatabaseManager()
-        spyglassDB.initializeDB(create_tables=True)
+        spyglassDB.initializeDB(create_tables=True, encryption_key="spyglass_default_key")
     return spyglassDB
 
 #Update tables
@@ -488,11 +488,6 @@ def updateActivityLogTable(userID: str, appID: int, action: str, category: Optio
         cursor.execute("""
             INSERT INTO activity_log (userID, appID, action, category, reason, duration)
             VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT(userID, appID, timestamp) DO UPDATE SET
-                action = excluded.action,
-                category = excluded.category,
-                reason = excluded.reason,
-                duration = excluded.duration
                 """, (userID, appID, action, category, reason, duration)
         )
         db.connection.commit()
@@ -516,13 +511,6 @@ def updateKeystrokeSummaryTable(eventID: int, intervalStart: str, intervalEnd: s
         cursor.execute("""
             INSERT INTO keystroke_summary (eventID, intervalStart, intervalEnd, keyCount, keysPerMinute, keyCategories, idleSeconds)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(eventID) DO UPDATE SET
-                intervalStart = excluded.intervalStart,
-                intervalEnd = excluded.intervalEnd,
-                keyCount = excluded.keyCount,
-                keysPerMinute = excluded.keysPerMinute,
-                keyCategories = excluded.keyCategories,
-                idleSeconds = excluded.idleSeconds
                 """, (eventID, intervalStart, intervalEnd, keyCount, keysPerMinute, keyCategories, idleSeconds)
         )
         db.connection.commit()

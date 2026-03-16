@@ -1,16 +1,26 @@
 {
     "cSpell.words": [
+        "addrs",
         "appmon",
         "autoflush",
+        "DGRAM",
         "executescript",
+        "fstype",
+        "gethostname",
         "getprocessor",
+        "HKLM",
         "keylogging",
+        "lastrowid",
+        "mountpoint",
+        "percpu",
         "psutil",
         "pynput",
         "sessionmaker",
         "sqlalchemy",
         "sqlcipher",
         "subkey",
-        "sypglass"
+        "sypglass",
+        "syscalls",
+        "timespec"
     ]
 }

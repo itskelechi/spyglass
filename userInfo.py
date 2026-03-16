@@ -4,6 +4,7 @@ import uuid
 import socket
 import os
 import subprocess
+import json
 from typing import Dict, Any, Optional
 from datetime import datetime
 
@@ -12,27 +13,27 @@ class UserInfo:
     
     def __init__(self):
         self.info = {}
-        self._gather_info()
+        self.gather_info()
     
-    def _gather_info(self) -> None:
+    def gather_info(self) -> None:
         # Gather all device information# 
         self.info = {
             "timestamp": datetime.now().isoformat(),
-            "system": self._get_system_info(),
-            "hardware": self._get_hardware_info(),
-            "network": self._get_network_info(),
-            "storage": self._get_storage_info(),
-            "memory": self._get_memory_info(),
-            "processor": self._get_processor_info(),
+            "system": self.get_system_info(),
+            "hardware": self.get_hardware_info(),
+            "network": self.get_network_info(),
+            "storage": self.get_storage_info(),
+            "memory": self.get_memory_info(),
+            "processor": self.get_processor_info(),
         }
     
-    def _get_system_info(self) -> Dict[str, str]:
+    def get_system_info(self) -> Dict[str, str]:
         # Get OS and system information# 
         try:
             return {
                 "os": platform.system(),
                 "os_version": platform.release(),
-                "os_build": self._get_windows_build(),
+                "os_build": self.get_windows_build(),
                 "hostname": socket.gethostname(),
                 "username": os.getenv("USERNAME", "Unknown"),
                 "machine": platform.machine(),
@@ -42,7 +43,7 @@ class UserInfo:
             print(f"Error gathering system info: {e}")
             return {}
     
-    def _get_windows_build(self) -> str:
+    def get_windows_build(self) -> str:
         # Get Windows build number# 
         try:
             result = subprocess.run(
@@ -55,7 +56,7 @@ class UserInfo:
         except Exception as e:
             return f"Error: {str(e)}"
     
-    def _get_hardware_info(self) -> Dict[str, Any]:
+    def get_hardware_info(self) -> Dict[str, Any]:
         # Get hardware information# 
         try:
             return {
@@ -70,13 +71,13 @@ class UserInfo:
             print(f"Error gathering hardware info: {e}")
             return {}
     
-    def _get_network_info(self) -> Dict[str, Any]:
+    def get_network_info(self) -> Dict[str, Any]:
         # Get network information# 
         try:
             net_info = {
                 "hostname": socket.gethostname(),
                 "fqdn": socket.getfqdn(),
-                "local_ip": self._get_local_ip(),
+                "local_ip": self.get_local_ip(),
                 "mac_addresses": {},
             }
             
@@ -92,7 +93,7 @@ class UserInfo:
             print(f"Error gathering network info: {e}")
             return {}
     
-    def _get_local_ip(self) -> str:
+    def get_local_ip(self) -> str:
         # Get local IP address# 
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -103,7 +104,7 @@ class UserInfo:
         except Exception:
             return "127.0.0.1"
     
-    def _get_storage_info(self) -> Dict[str, Any]:
+    def get_storage_info(self) -> Dict[str, Any]:
         # Get storage information for all disks# 
         try:
             storage_info = {}
@@ -128,7 +129,7 @@ class UserInfo:
             print(f"Error gathering storage info: {e}")
             return {}
     
-    def _get_memory_info(self) -> Dict[str, Any]:
+    def get_memory_info(self) -> Dict[str, Any]:
         # Get detailed memory information# 
         try:
             vm = psutil.virtual_memory()
@@ -155,21 +156,31 @@ class UserInfo:
             print(f"Error gathering memory info: {e}")
             return {}
     
-    def _get_processor_info(self) -> Dict[str, Any]:
+    def get_processor_info(self) -> Dict[str, Any]:
         # Get processor information# 
         try:
             return {
                 "processor": platform.processor(),
                 "cpu_percent": psutil.cpu_percent(interval=1),
                 "cpu_percent_per_core": psutil.cpu_percent(interval=1, percpu=True),
-                "cpu_freq": self._get_cpu_freq(),
-                "cpu_stats": self._get_cpu_stats(),
+                "cpu_freq": self.get_cpu_freq(),
+                "cpu_stats": self.get_cpu_stats(),
             }
         except Exception as e:
             print(f"Error gathering processor info: {e}")
             return {}
+
+    def save_to_file(self, file_path: Optional[str] = None) -> str:
+        # Save all gathered device information to a JSON file#
+        if file_path is None:
+            file_path = os.path.join(os.path.dirname(__file__), "system_info.json")
+
+        with open(file_path, 'w', encoding='utf-8') as file:
+            json.dump(self.info, file, indent=2)
+
+        return file_path
     
-    def _get_cpu_freq(self) -> Dict[str, Optional[float]]:
+    def get_cpu_freq(self) -> Dict[str, Optional[float]]:
         # Get CPU frequency# 
         try:
             freq = psutil.cpu_freq()
@@ -181,7 +192,7 @@ class UserInfo:
         except Exception:
             return {"current_mhz": None, "min_mhz": None, "max_mhz": None}
     
-    def _get_cpu_stats(self) -> Dict[str, int]:
+    def get_cpu_stats(self) -> Dict[str, int]:
         # Get CPU statistics# 
         try:
             stats = psutil.cpu_stats()

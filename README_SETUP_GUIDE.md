@@ -21,12 +21,16 @@ If you get permission errors, try:
     pip install --user -r requirements.txt
 
 
-#### STEP 2: Run the Keystroke Test
-===============================
+#### STEP 2: Run the Spyglass App
+==============================
 
 In the same terminal, run:
 
-    python keylogger.py
+   python spyglass.py
+
+Optional launcher menu (starts Spyglass from `main.py`):
+
+   python main.py
 
 
 #### STEP 3: Follow the On-Screen Prompts
@@ -57,7 +61,7 @@ D. DATABASE SETUP
    - Ready for testing
 
 E. KEYSTROKE MENU (if you selected HIGH)
-   - Select option 1 or 2 for 30 or 60-minute test
+   - Select option 1 or 2 for 30 or 60-second test
    - Type freely on your keyboard
    - Test counts down automatically
    - Results show keystroke frequency analysis
@@ -73,7 +77,7 @@ KEYSTROKE LOGGING RESULTS
 
 Total keystrokes captured: [number]
 
-Keystroke Frequency (Top 20):
+Keystroke Frequency:
   'e'       42 ████████████████████████████████░░░░░░░
   't'       38 ███████████████████████████░░░░░░░░░░░░░
   'a'       35 ████████████████████░░░░░░░░░░░░░░░░░░
@@ -98,6 +102,11 @@ spyglass_settings.json
 .spyglass_key (if using file-based encryption)
   - Encryption key file
   - Keep secure and secret
+
+system_info.json
+   - Full system/device information captured at startup
+   - Saved in the Spyglass app folder
+   - Used as a local record of initialization data
 
 
 ### TROUBLESHOOTING
@@ -155,7 +164,6 @@ Fix: Try running Command Prompt as Administrator first,
 After testing keystroke logging:
 
 1. Add more features:
-   - Application monitoring
    - Screenshot capture
    - Activity logging
    - Process tracking
@@ -184,10 +192,8 @@ This is for AUTHORIZED TESTING ONLY.
 
 Check the relevant file:
 - Keystroke logging: keylogger.py
+- App Monitoring: appMonitor.py
 - Consent screen: consent.py
 - Configuration: configSettings.py
 - Database: database.py
 - Admin privileges: adminHandler.py
-
-See README_KEYLOGGER.md for more details.
-
