@@ -70,7 +70,7 @@ class Spyglass:
 
         # system setup
         self.keylogger = Keylogger(self)
-        self.app_monitor = AppMonitor(self)
+        self.app_monitor = AppMonitor()
         self.monitoring_level = self.consent.get_monitoring_level()
 
         # Log installed apps to DB
@@ -215,7 +215,6 @@ class Spyglass:
             sys.stdout.write("\r" + " " * 40 + "\r")  # Clear the line
             
             self.app_monitor.stop_monitoring()
-            self.database.Update
             print("\nApp monitoring stopped.\n")
             logging.info("App monitoring stopped")
             return True
@@ -412,37 +411,54 @@ class Spyglass:
                     print("\nInvalid choice. Please select between 1-5.\n")
     
     def show_installed_apps(self) -> None:
-        """Display all installed applications"""
+        """Display applications logged in the database"""
         print("\n" + "="*70)
-        print("INSTALLED APPLICATIONS".center(70))
+        print("SPYGLASS - MY APPS".center(70))
         print("="*70 + "\n")
-        
-        print("Scanning for installed applications...\n")
-        installed_apps = self.app_monitor.get_installed_apps()
-        
-        if not installed_apps:
-            print("No installed applications found.\n")
+
+        if not self.database or not self.database.connection:
+            print("Database is not available.\n")
             return
-        
-        print(f"Found {len(installed_apps)} installed applications:\n")
-        print(f"{'Application Name':<40} {'Vendor':<25} {'Version':<15}")
-        print("-" * 80)
-        
-        for app in sorted(installed_apps, key=lambda x: x['name'])[:50]:  # Show top 50
-            name = app['name'][:38] if len(app['name']) > 38 else app['name']
-            vendor = app['vendor'][:23] if len(app['vendor']) > 23 else app['vendor']
-            version = app['version'][:13] if len(app['version']) > 13 else app['version']
-            print(f"{name:<40} {vendor:<25} {version:<15}")
-        
-        if len(installed_apps) > 50:
-            print(f"\n... and {len(installed_apps) - 50} more applications")
+
+        try:
+            cursor = self.database.connection.cursor()
+            cursor.execute(
+                """
+                SELECT appName, vendor, executablePath
+                FROM application
+                ORDER BY appName COLLATE NOCASE ASC
+                """
+            )
+            logged_apps = cursor.fetchall()
+            cursor.close()
+        except Exception as e:
+            print(f"Error reading applications from database: {e}\n")
+            logging.error(f"Error reading applications from database: {e}", exc_info=True)
+            return
+
+        if not logged_apps:
+            print("No applications have been logged to the database yet.\n")
+            return
+
+        print(f"Found {len(logged_apps)} applications logged in the database:\n")
+        print(f"{'Application Name':<30} {'Vendor':<22} {'Executable Path':<35}")
+        print("-" * 90)
+
+        for app_name, vendor, executable_path in logged_apps[:50]:
+            display_name = app_name[:28] if len(app_name) > 28 else app_name
+            display_vendor = (vendor or 'Unknown')[:20] if vendor else 'Unknown'
+            display_path = executable_path[:33] if len(executable_path) > 33 else executable_path
+            print(f"{display_name:<30} {display_vendor:<22} {display_path:<35}")
+
+        if len(logged_apps) > 50:
+            print(f"\n... and {len(logged_apps) - 50} more applications")
         
         print("\n" + "="*70 + "\n")
     
     def show_running_apps(self) -> None:
         """Display all currently running applications"""
         print("\n" + "="*70)
-        print("RUNNING APPLICATIONS".center(70))
+        print("SPYGLASS - RUNNING APPLICATIONS".center(70))
         print("="*70 + "\n")
         
         print("Scanning for running applications...\n")
@@ -480,8 +496,10 @@ def main():
     """Main entry point for the Spyglass test """
     # Setup file logging with timestamp
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_file = os.path.join(os.path.dirname(__file__), f'spyglass_test_{timestamp}.log')
-    keystroke_log_file = os.path.join(os.path.dirname(__file__), f'keystrokes_{timestamp}.log')
+    reports_dir = os.path.join(os.path.dirname(__file__), 'Reports')
+    os.makedirs(reports_dir, exist_ok=True)
+    log_file = os.path.join(reports_dir, f'spyglass_test_{timestamp}.log')
+    keystroke_log_file = os.path.join(reports_dir, f'keystrokes_{timestamp}.log')
     
     # Create separate loggers for application activity and keystroke data
     app_logger = logging.getLogger('app')
