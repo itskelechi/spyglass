@@ -6,75 +6,11 @@
     "os_build": "26200",
     "hostname": "Kelechi",
     "username": "kayka",
-    "machine": "AMD64",
-    "platform": "win32"
   },
   "hardware": {},
   "network": {
     "hostname": "Kelechi",
-    "fqdn": "Kelechi.attlocal.net",
-    "local_ip": "192.168.1.115",
-    "mac_addresses": {
-      "Ethernet 4": "0A-00-27-00-00-11",
-      "Local Area Connection": "00-FF-EB-BB-CD-EA",
-      "Local Area Connection* 1": "6C-94-66-A2-CB-3D",
-      "Local Area Connection* 2": "6E-94-66-A2-CB-3C",
-      "Wi-Fi": "6C-94-66-A2-CB-3C",
-      "Bluetooth Network Connection": "6C-94-66-A2-CB-40"
     }
   },
-  "storage": {
-    "C:\\": {
-      "mountpoint": "C:\\",
-      "fstype": "NTFS",
-      "total_bytes": 1023197372416,
-      "total_gb": 952.93,
-      "used_bytes": 678272712704,
-      "used_gb": 631.69,
-      "free_bytes": 344924659712,
-      "free_gb": 321.24,
-      "percent_used": 66.3
-    }
   },
-  "memory": {
-    "virtual_memory": {
-      "total_bytes": 33681838080,
-      "total_gb": 31.37,
-      "available_bytes": 17535455232,
-      "available_gb": 16.33,
-      "percent": 47.9,
-      "used_bytes": 16146382848,
-      "free_bytes": 17535455232
-    },
-    "swap_memory": {
-      "total_bytes": 5404041216,
-      "total_gb": 5.03,
-      "used_bytes": 235700224,
-      "free_bytes": 5168340992,
-      "percent": 4.4
-    }
-  },
-  "processor": {
-    "processor": "AMD64 Family 23 Model 96 Stepping 1, AuthenticAMD",
-    "cpu_percent": 1.8,
-    "cpu_percent_per_core": [
-      10.6,
-      0.0,
-      4.7,
-      0.0,
-      3.1,
-      3.1
-    ],
-    "cpu_freq": {
-      "current_mhz": 2375.0,
-      "min_mhz": 0.0,
-      "max_mhz": 2375.0
-    },
-    "cpu_stats": {
-      "ctx_switches": 679870498,
-      "interrupts": 413770128,
-      "soft_interrupts": 0,
-      "syscalls": 3290118828
-    }
-  }
-}
+ 
