@@ -513,6 +513,8 @@ def main():
     # Setup file logging with timestamp
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     reports_dir = os.path.join(os.path.dirname(__file__), 'Reports')
+   
+    # make the folder if it doesn't exist
     os.makedirs(reports_dir, exist_ok=True)
     log_file = os.path.join(reports_dir, f'spyglass_test_{timestamp}.log')
     keystroke_log_file = os.path.join(reports_dir, f'keystrokes_{timestamp}.log')
