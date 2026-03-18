@@ -60,12 +60,6 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Run Keystroke Test (Recommended for Testing)
-
-```bash
-python keylogger.py
-```
-
 **What happens:**
 1. **Consent Screen**: Review monitoring terms and select monitoring level
    - Select `1` for LOW (basic monitoring)
