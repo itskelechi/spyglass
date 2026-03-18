@@ -8,7 +8,7 @@ A Windows-based device monitoring application with consent-driven monitoring lev
 # Install dependencies
 pip install -r requirements.txt
 
-# Run keystroke logging test
+# Run App test
 python spyglass.py
 ```
 
@@ -327,4 +327,4 @@ To use SQLCipher for encrypted databases:
 
 ## Version
 
-0.1.0 - Initial Release
+0.0.3 - Initial Release
