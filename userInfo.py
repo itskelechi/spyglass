@@ -1,3 +1,4 @@
+import logging
 import platform
 import psutil
 import uuid
@@ -17,6 +18,7 @@ class UserInfo:
     
     def gather_info(self) -> None:
         # Gather all device information# 
+        logging.info("Gathering user system information...")
         self.info = {
             "timestamp": datetime.now().isoformat(),
             "system": self.get_system_info(),
@@ -41,6 +43,7 @@ class UserInfo:
             }
         except Exception as e:
             print(f"Error gathering system info: {e}")
+            logging.error(f"Error gathering system info: {e}", exc_info=True)
             return {}
     
     def get_windows_build(self) -> str:
@@ -60,7 +63,7 @@ class UserInfo:
         # Get hardware information# 
         try:
             return {
-                "machine_id": str(uuid.node()),
+                "machine_id": str(uuid.getnode()),
                 "processor_count": psutil.cpu_count(),
                 "processor_count_logical": psutil.cpu_count(logical=True),
                 "total_ram_bytes": psutil.virtual_memory().total,
@@ -69,6 +72,7 @@ class UserInfo:
             }
         except Exception as e:
             print(f"Error gathering hardware info: {e}")
+            logging.error(f"Error gathering hardware info: {e}", exc_info=True)
             return {}
     
     def get_network_info(self) -> Dict[str, Any]:
@@ -91,6 +95,7 @@ class UserInfo:
             return net_info
         except Exception as e:
             print(f"Error gathering network info: {e}")
+            logging.error(f"Error gathering network info: {e}", exc_info=True)
             return {}
     
     def get_local_ip(self) -> str:
@@ -102,6 +107,7 @@ class UserInfo:
             s.close()
             return ip
         except Exception:
+            logging.warning("Could not determine local IP address, defaulting to 127.0.0.1")
             return "127.0.0.1"
     
     def get_storage_info(self) -> Dict[str, Any]:
@@ -127,6 +133,7 @@ class UserInfo:
             return storage_info
         except Exception as e:
             print(f"Error gathering storage info: {e}")
+            logging.error(f"Error gathering storage info: {e}", exc_info=True)
             return {}
     
     def get_memory_info(self) -> Dict[str, Any]:
@@ -154,6 +161,7 @@ class UserInfo:
             }
         except Exception as e:
             print(f"Error gathering memory info: {e}")
+            logging.error(f"Error gathering memory info: {e}", exc_info=True)
             return {}
     
     def get_processor_info(self) -> Dict[str, Any]:
@@ -167,7 +175,7 @@ class UserInfo:
                 "cpu_stats": self.get_cpu_stats(),
             }
         except Exception as e:
-            print(f"Error gathering processor info: {e}")
+            logging.error(f"Error gathering processor info: {e}", exc_info=True)
             return {}
 
     def save_to_file(self, file_path: Optional[str] = None) -> str:
@@ -189,7 +197,8 @@ class UserInfo:
                 "min_mhz": freq.min,
                 "max_mhz": freq.max,
             }
-        except Exception:
+        except Exception as e:
+            logging.error(f"Error gathering CPU frequency info: {e}", exc_info=True)
             return {"current_mhz": None, "min_mhz": None, "max_mhz": None}
     
     def get_cpu_stats(self) -> Dict[str, int]:
@@ -202,7 +211,8 @@ class UserInfo:
                 "soft_interrupts": stats.soft_interrupts,
                 "syscalls": stats.syscalls,
             }
-        except Exception:
+        except Exception as e:
+            logging.error(f"Error gathering CPU stats info: {e}", exc_info=True)
             return {}
     
     def get_all_info(self) -> Dict[str, Any]:

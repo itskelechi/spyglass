@@ -26,6 +26,7 @@ class Spyglass:
         self.consent = None
         self.config = None
         self.database = None
+        self.user_info: Optional[UserInfo] = None
         self.keylogger = None
         self.monitoring_level = None
         self.is_running = False
@@ -168,6 +169,7 @@ class Spyglass:
             logging.info(f"System information saved to: {system_info_path}")
 
             self.database.UpdateUserTable(deviceInfo=device_info)
+            self.user_info = user_info
             
             logging.info("Verifying database connection...")
             if not self.database.verifyConnection():
@@ -353,7 +355,21 @@ class Spyglass:
         #test menu
         while True:
             print("="*70)
-            print("SPYGLASS TEST MENU".center(70))
+            display_name = "User"
+            if self.user_info and isinstance(self.user_info.info, dict):
+                sys_info = self.user_info.info.get('system', {})
+                hw_info = self.user_info.info.get('hardware', {})
+                username = sys_info.get('username')
+                hostname = sys_info.get('hostname')
+                machine_id = hw_info.get('machine_id')
+
+                if isinstance(username, str) and username.strip():
+                    display_name = username.upper()
+                elif isinstance(hostname, str) and hostname.strip():
+                    display_name = hostname.upper()
+                elif isinstance(machine_id, str) and machine_id.strip():
+                    display_name = machine_id
+            print(f"WELCOME {display_name}".ljust(70))
             print("="*70)
             print(f"\nMonitoring Level: {self.monitoring_level}")
             
