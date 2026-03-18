@@ -1,0 +1,6 @@
+sqlalchemy==2.0.23
+psutil==5.9.6
+pynput==1.7.6
+cryptography==41.0.7
+sqlcipher3-binary==3.46.1
+pywin32==306
