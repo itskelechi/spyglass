@@ -9,7 +9,7 @@ A Windows-based device monitoring application with consent-driven monitoring lev
 pip install -r requirements.txt
 
 # Run keystroke logging test
-python keylogger.py
+python spyglass.py
 ```
 
 ## Features
@@ -63,7 +63,7 @@ pip install -r requirements.txt
 ### Run Keystroke Test (Recommended for Testing)
 
 ```bash
-python keylogger.py
+python spyglass.py
 ```
 
 **What happens:**
@@ -80,14 +80,6 @@ python keylogger.py
    - 60-second keystroke test  
    - View current settings
    - Exit
-
-### Main Application
-
-```bash
-python main.py
-```
-
-Shows menu to launch the keystroke test.
 
 ## Test Flow
 
@@ -247,7 +239,6 @@ CREATE TABLE userInfo (
   userID TEXT PRIMARY, --machineId
   SystemInfo  --osType,  osVersion,  osBuild 
   username TEXT, --hostname
-  email TEXT, --
   processorCount INTEGER,
   macAddresses TEXT (JSON), 
   systemInfo TEXT (JSON),
@@ -272,7 +263,7 @@ CREATE TABLE userInfo (
 Edit `userInfo.py` to add new information gathering methods:
 
 ```python
-def _get_custom_info(self) -> Dict[str, Any]:
+def get_custom_info(self) -> Dict[str, Any]:
     # Get custom device information# 
     try:
         # Your custom information gathering code
@@ -282,7 +273,7 @@ def _get_custom_info(self) -> Dict[str, Any]:
         return {}
 ```
 
-Then add it to the `_gather_info()` method in the `__init__` function.
+Then add it to the `gather_info()` method in the `__init__` function.
 
 ### Enabling Database Encryption
 
@@ -332,7 +323,7 @@ To use SQLCipher for encrypted databases:
 
 ## Author
 
-[Add author information here]
+[Kelechi Ariwodo]
 
 ## Version
 
