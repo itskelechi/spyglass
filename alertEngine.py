@@ -121,7 +121,7 @@ class AlertEngine:
                 self.raise_alert(
                     CRITICAL_SECURITY, 
                     alert_type="Password Field Detected", 
-                    key=f"PasswordField_{title}",
+                    key=f"PasswordFieldDetected_{title}",
                     message=f'Potential password field detected in window: "{title}"',
                     app_name=script['name'], exe_path=script.get('exe', ''))
                 break
