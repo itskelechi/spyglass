@@ -1,9 +1,4 @@
-"""
-Spyglass Integrated Test
-This module provides an integrated testing interface for both app monitoring and keylogging.
-Users can choose between high security (app monitoring + keylogging) and low security (app monitoring only).
-"""
-
+"""Welcome to Spyglass"""
 import sys
 import time
 import logging
@@ -75,7 +70,7 @@ class Spyglass:
         self.monitoring_level = self.consent.get_monitoring_level()
 
         # Log installed apps to DB
-        app_count = self.app_monitor.scan_and_log_installed_apps()
+        app_count = self.app_monitor.log_apps()
         logging.info(f"Installed apps logged to DB: {app_count}")
         self.is_running = True
         
@@ -226,10 +221,12 @@ class Spyglass:
             logging.error(f"Error during app monitoring: {e}", exc_info=True)
             return False
     
-   
-            print(f"\nError during keystroke logging: {e}\n")
-            logging.error(f"Error during keystroke logging: {e}", exc_info=True)
+    def start_keylogger(self, duration: int = 180) -> bool:
+        """Start keystroke logging for specified duration"""
+        if not self.is_running:
+            print("Spyglass has not been initialized. Please run setup first.\n")
             return False
+        return self.keylogger.start_keylogger(duration)
     
     def full_monitoring(self, duration: int = 180) -> bool:
         #Start both app monitoring and keylogging together (HIGH security only)
@@ -274,6 +271,10 @@ class Spyglass:
             
             sys.stdout.write("\r" + " " * 40 + "\r")  # Clear the line
             
+            # Save keystrokes before stopLog clears them
+            with self.keystroke_monitor.lock:
+                self.last_integrated_keystrokes = self.keystroke_monitor.keystrokes.copy()
+            
             # Stop both monitors
             self.app_monitor.stop_monitoring()
             self.keystroke_monitor.stopLog()
@@ -298,6 +299,9 @@ class Spyglass:
         
         with self.keystroke_monitor.lock:
             keylogger_data = self.keystroke_monitor.keystrokes.copy()
+        
+        if not keylogger_data and hasattr(self, 'last_integrated_keystrokes'):
+            keylogger_data = self.last_integrated_keystrokes
         
         if not keylogger_data:
             print("\nNo keystrokes were captured during this session.\n")
@@ -390,7 +394,7 @@ class Spyglass:
                 elif choice == '2':
                     self.start_keylogger(180)
                 elif choice == '3':
-                    self.start_integrated_test(180)
+                    self.full_monitoring(180)
                 elif choice == '4':
                     self.config.print_settings()
                 elif choice == '5':
@@ -509,6 +513,7 @@ class Spyglass:
 
 
 def main():
+    # App Entry Point
     """Main entry point for the Spyglass test """
     # Setup file logging with timestamp
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -572,10 +577,12 @@ def main():
         logging.info("Cleaning up resources...")
         app.cleanup()
         logging.info("Spyglass shutdown completed.")
+        
     except KeyboardInterrupt:
         logging.info("Spyglass interrupted by user.")
         print("\n\nSpyglass interrupted by user.")
         sys.exit(0)
+        
     except Exception as e:
         logging.error(f"Fatal error: {e}", exc_info=True)
         print(f"\nFatal error: {e}")
