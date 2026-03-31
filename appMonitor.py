@@ -6,7 +6,7 @@ import sys
 import psutil
 import winreg
 
-from database import updateAppTable
+from database import insertIntoAppTable
 
 
 class AppMonitor:
@@ -192,7 +192,7 @@ class AppMonitor:
                 if not executable_path or executable_path == "Unknown":
                     executable_path = f"UNKNOWN::{app['name']}"
 
-                if updateAppTable(
+                if insertIntoAppTable(
                     appName=app["name"],
                     executablePath=executable_path,
                     vendor=app["vendor"],

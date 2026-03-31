@@ -6,6 +6,8 @@ import json
 import os
 from typing import Dict, Any, Optional
 
+from alertEngine import BLOCKLISTED_APPS, SCRIPTS_EXT
+
 
 class ConfigSettings:
     # Manage Spyglass monitoring configuration 
@@ -40,6 +42,10 @@ class ConfigSettings:
             "debug_logging": False,
             "auto_backup_enabled": False,
             "database_encryption": True,
+            "blocklisted_apps": sorted(BLOCKLISTED_APPS),
+            "script_extensions": sorted(SCRIPTS_EXT),
+            "alert_polling_interval": 15,
+            "alert_popup_auto_close": 30,
         }
     
     def set_monitoring_level(self, level: str) -> bool:

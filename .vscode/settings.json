@@ -7,6 +7,7 @@
         "autoflush",
         "Blocklist",
         "BLOCKLISTED",
+        "COLOURS",
         "DGRAM",
         "executescript",
         "fstype",
@@ -26,11 +27,14 @@
         "netsh",
         "nmap",
         "NOCASE",
+        "padx",
+        "pady",
         "percpu",
         "pids",
         "psutil",
         "pynput",
         "Reverseshells",
+        "Segoe",
         "sessionmaker",
         "socat",
         "sqlalchemy",
@@ -42,6 +46,9 @@
         "teamviewer",
         "timespec",
         "ultraviewer",
-        "wireshark"
+        "WINFUNCTYPE",
+        "wireshark",
+        "WNDENUMPROC",
+        "wraplength"
     ]
 }

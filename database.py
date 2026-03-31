@@ -115,20 +115,28 @@ class DatabaseManager:
                     );
 
                     -- -------------------------
-                    -- PRIVACY_THRESHOLD
-                    -- (thresholds defined per app in ERD)
+                    -- THRESHOLD
+                    -- (privacy and security thresholds)
                     -- -------------------------
-                    CREATE TABLE IF NOT EXISTS privacy_threshold (
-                    thresholdID               INTEGER PRIMARY KEY AUTOINCREMENT,
-                    appID                     INTEGER NOT NULL,
-                    maxKeystrokesPerMin       INTEGER,
-                    maxScreenAccessPerHour    INTEGER,
-                    maxRuntimeMinutes         INTEGER,
-                    createdAt                 TEXT    NOT NULL DEFAULT (datetime('now')),
+                    CREATE TABLE IF NOT EXISTS threshold (
+                    thresholdID     INTEGER PRIMARY KEY AUTOINCREMENT,
+                    userID          TEXT    NOT NULL,
+                    appID           INTEGER,                       -- NULL for system-wide thresholds
+                    thresholdType   TEXT    NOT NULL,              -- 'privacy' or 'security'
+                    settingName     TEXT    NOT NULL,
+                    settingValue    TEXT    NOT NULL,
+                    enabled         INTEGER NOT NULL DEFAULT 1,
+                    createdAt       TEXT    NOT NULL DEFAULT (datetime('now')),
+
+                    CONSTRAINT fk_threshold_user
+                        FOREIGN KEY (userID) REFERENCES user(userID)
+                        ON DELETE CASCADE ON UPDATE CASCADE,
 
                     CONSTRAINT fk_threshold_app
                         FOREIGN KEY (appID) REFERENCES application(appID)
-                        ON DELETE CASCADE ON UPDATE CASCADE
+                        ON DELETE CASCADE ON UPDATE CASCADE,
+
+                    CONSTRAINT ck_threshold_enabled CHECK (enabled IN (0,1))
                     );
 
                     -- -------------------------
@@ -220,14 +228,13 @@ class DatabaseManager:
                     -- -------------------------
                     CREATE TABLE IF NOT EXISTS alert (
                     alertID      INTEGER PRIMARY KEY AUTOINCREMENT,
-                    userID       TEXT NOT NULL,
-                    appID        INTEGER NOT NULL,
-                    thresholdID  INTEGER NOT NULL,
-                    timestamp     TEXT    NOT NULL DEFAULT (datetime('now')),
-                    alertType    TEXT    NOT NULL,     -- e.g., excessive_keystrokes, invasive_tos
-                    severity      TEXT    NOT NULL,     -- e.g., low/medium/high/critical
-                    dismissed     TEXT,                -- datetime when dismissed
-                    resolved      INTEGER NOT NULL DEFAULT 0, -- boolean (0/1)
+                    userID       TEXT    NOT NULL,
+                    appID        INTEGER,              -- NULL for system-wide alerts
+                    severity     TEXT    NOT NULL,      -- low / medium / high / critical
+                    alertType    TEXT    NOT NULL,      -- background_script, simultaneous_scripts, etc.
+                    message      TEXT    NOT NULL,      -- human-readable description
+                    response     TEXT,                  -- NULL = pending, 'dismissed', 'resolved'
+                    createdAt    TEXT    NOT NULL DEFAULT (datetime('now')),
 
                     CONSTRAINT fk_alert_user
                         FOREIGN KEY (userID) REFERENCES user(userID)
@@ -235,13 +242,7 @@ class DatabaseManager:
 
                     CONSTRAINT fk_alert_app
                         FOREIGN KEY (appID) REFERENCES application(appID)
-                        ON DELETE CASCADE ON UPDATE CASCADE,
-
-                    CONSTRAINT fk_alert_threshold
-                        FOREIGN KEY (thresholdID) REFERENCES privacy_threshold(thresholdID)
-                        ON DELETE CASCADE ON UPDATE CASCADE,
-
-                    CONSTRAINT ck_alert_resolved_bool CHECK (resolved IN (0,1))
+                        ON DELETE CASCADE ON UPDATE CASCADE
                     );
 
                     -- ============================================================
@@ -257,11 +258,17 @@ class DatabaseManager:
                     CREATE INDEX IF NOT EXISTS idx_event_activity_time
                     ON activity_log (eventID, timestamp);
 
-                    CREATE INDEX IF NOT EXISTS idx_alert_user_time
-                    ON alert (userID, timestamp);
+                    CREATE INDEX IF NOT EXISTS idx_alert_severity
+                    ON alert (severity);
 
-                    CREATE INDEX IF NOT EXISTS idx_threshold_app
-                    ON privacy_threshold (appID);
+                    CREATE INDEX IF NOT EXISTS idx_alert_user
+                    ON alert (userID);
+
+                    CREATE INDEX IF NOT EXISTS idx_threshold_user
+                    ON threshold (userID);
+
+                    CREATE INDEX IF NOT EXISTS idx_threshold_type
+                    ON threshold (thresholdType);
 
                     CREATE INDEX IF NOT EXISTS idx_report_user_time
                     ON report (userID, generatedAt);
@@ -297,7 +304,7 @@ class DatabaseManager:
             print(f"Database connection verification failed: {e}")
             return False
     
-    def UpdateUserTable(self, deviceInfo: dict) -> bool:
+    def insertIntoUserTable(self, deviceInfo: dict) -> bool:
         #Store device information in the user table
         if self.connection is None:
             print("Database connection is not initialized.")
@@ -368,8 +375,8 @@ def getDB() -> DatabaseManager:
         spyglassDB.initializeDB(create_tables=True, encryption_key="spyglass_default_key")
     return spyglassDB
 
-#Update tables
-def updateAppTable(appName: str, executablePath: str, vendor: Optional[str] = None) -> bool:
+#Insert into tables
+def insertIntoAppTable(appName: str, executablePath: str, vendor: Optional[str] = None) -> bool:
     db = getDB()
     if db.connection is None:
         print("Database connection is not initialized. Cannot update schema.")
@@ -394,7 +401,7 @@ def updateAppTable(appName: str, executablePath: str, vendor: Optional[str] = No
         print(f"Error updating database schema: {e}")
         return False
 
-def updateMonitoringSettingsTable(userID: str, aggressivenessLevel: str, screenshotInterval: Optional[int] = None,
+def insertIntoMonitoringSettingsTable(userID: str, aggressivenessLevel: str, screenshotInterval: Optional[int] = None,
                                   keystrokeLoggingEnabled: bool = False, appMonitoringEnabled: bool = True,
                                   maxStorageMB: int = 500) -> bool:
     db = getDB()
@@ -424,34 +431,53 @@ def updateMonitoringSettingsTable(userID: str, aggressivenessLevel: str, screens
         print(f"Error updating Monitoring Settings Table: {e}")
         return False
 
-def updatePrivacyThresholdTable(appID: int, maxKeystrokesPerMin: Optional[int] = None,
-                               maxScreenAccessPerHour: Optional[int] = None, maxRuntimeMinutes: Optional[int] = None) -> bool:
+def insertIntoThresholdTable(userID: str, thresholdType: str, settingName: str, settingValue: str,
+                             appID: Optional[int] = None, enabled: bool = True) -> bool:
     db = getDB()
     if db.connection is None:
         print("Database connection is not initialized. Cannot update schema.")
         return False
-    print("Updating Privacy Threshold Table in database schema...")
+    print("Updating Threshold Table in database schema...")
     try:
         cursor = db.connection.cursor()
         cursor.execute("""
-            INSERT INTO privacy_threshold (thresholdID, appID, maxKeystrokesPerMin, maxScreenAccessPerHour, maxRuntimeMinutes, createdAt)
-            VALUES (NULL, ?, ?, ?, ?, datetime('now'))
-            ON CONFLICT(appID) DO UPDATE SET
-            maxKeystrokesPerMin = excluded.maxKeystrokesPerMin, 
-            maxScreenAccessPerHour = excluded.maxScreenAccessPerHour,
-            maxRuntimeMinutes = excluded.maxRuntimeMinutes,
-            createdAt = datetime('now')
-            """, (appID, maxKeystrokesPerMin, maxScreenAccessPerHour, maxRuntimeMinutes)
+            INSERT INTO threshold (userID, appID, thresholdType, settingName, settingValue, enabled, createdAt)
+            VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+            """, (userID, appID, thresholdType, settingName, settingValue, int(enabled))
         )
         db.connection.commit()
         cursor.close()
-        print("Privacy Threshold Table updated successfully.")
+        print("Threshold Table updated successfully.")
         return True
     except Exception as e:
-        print(f"Error updating Privacy Threshold Table: {e}")
+        print(f"Error inserting threshold: {e}")
         return False
 
-def updateReportTable(userID:str, report_type:str, file_path:str) -> bool:
+def insertDefaultThresholds(userID: str) -> None:
+    db = getDB()
+    if db.connection is None:
+        return
+    try:
+        cursor = db.connection.cursor()
+        cursor.execute("SELECT COUNT(*) FROM threshold WHERE userID = ? AND thresholdType = 'security'", (userID,))
+        count = cursor.fetchone()[0]
+        cursor.close()
+        if count > 0:
+            return  # already seeded
+    except Exception:
+        return
+
+    defaults = [
+        ('security', 'background_script_limit', '1'),
+        ('security', 'simultaneous_script_limit', '10'),
+        ('security', 'same_app_script_limit', '3'),
+        ('security', 'password_detection', '1'),
+        ('security', 'blocklist_enabled', '1'),
+    ]
+    for t_type, name, value in defaults:
+        insertIntoThresholdTable(userID, t_type, name, value)
+
+def insertIntoReportTable(userID:str, report_type:str, file_path:str) -> bool:
     db = getDB()
     if db.connection is None:
         print("Database connection is not initialized. Cannot update schema.")
@@ -476,7 +502,7 @@ def updateReportTable(userID:str, report_type:str, file_path:str) -> bool:
         print(f"Error updating Report Table: {e}")
         return False
 
-def updateActivityLogTable(userID: str, appID: int, action: str, category: Optional[str] = None,
+def insertIntoActivityLogTable(userID: str, appID: int, action: str, category: Optional[str] = None,
                           reason: Optional[str] = None, duration: Optional[int] = None) -> bool:
     db = getDB()
     if db.connection is None:
@@ -498,7 +524,7 @@ def updateActivityLogTable(userID: str, appID: int, action: str, category: Optio
         print(f"Error updating Activity Log Table: {e}")
         return False
 
-def updateKeystrokeSummaryTable(eventID: int, intervalStart: str, intervalEnd: str, keyCount: int,
+def insertIntoKeystrokeSummaryTable(eventID: int, intervalStart: str, intervalEnd: str, keyCount: int,
                                keysPerMinute: Optional[int] = None, keyCategories: Optional[str] = None,
                                idleSeconds: int = 0) -> bool:
     db = getDB()
@@ -521,35 +547,68 @@ def updateKeystrokeSummaryTable(eventID: int, intervalStart: str, intervalEnd: s
         print(f"Error updating Keystroke Summary Table: {e}")
         return False
 
-def updateAlertTable(userID: str, appID: int, thresholdID: int, alertType: str, severity: str,
-                     dismissed: Optional[str] = None, resolved: bool = False) -> bool:
+def insertIntoAlertTable(userID: str, alertType: str, severity: str, message: str,
+                         appID: Optional[int] = None, response: Optional[str] = None) -> Optional[int]:
+    """Insert alert and return the new alertID."""
     db = getDB()
     if db.connection is None:
-        print("Database connection is not initialized. Cannot update schema.")
-        return False
-    print("Updating Alert Table in database schema...")
+        print("Database connection is not initialized.")
+        return None
     try:
         cursor = db.connection.cursor()
         cursor.execute("""
-            INSERT INTO alert (userID, appID, thresholdID, alertType, severity, dismissed, resolved)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(alertID) DO UPDATE SET
-                userID = excluded.userID,
-                appID = excluded.appID,
-                thresholdID = excluded.thresholdID,
-                alertType = excluded.alertType,
-                severity = excluded.severity,
-                dismissed = excluded.dismissed,
-                resolved = excluded.resolved
-                """, (userID, appID, thresholdID, alertType, severity, dismissed, resolved)
+            INSERT INTO alert (userID, appID, severity, alertType, message, response, createdAt)
+            VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+            """, (userID, appID, severity, alertType, message, response)
         )
+        alert_id = cursor.lastrowid
         db.connection.commit()
         cursor.close()
-        print("Alert Table updated successfully.")
+        return alert_id
+    except Exception as e:
+        print(f"Error inserting alert: {e}")
+        return None
+
+
+#Update tables
+def updateAlertResponse(alertID: int, response: str) -> bool:
+    """Update alert response to 'dismissed' or 'resolved'."""
+    db = getDB()
+    if db.connection is None:
+        return False
+    try:
+        cursor = db.connection.cursor()
+        cursor.execute("UPDATE alert SET response = ? WHERE alertID = ?", (response, alertID))
+        db.connection.commit()
+        cursor.close()
         return True
     except Exception as e:
-        print(f"Error updating Alert Table: {e}")
+        print(f"Error updating alert response: {e}")
         return False
+
+def getOrCreateAppID(appName: str, executablePath: str) -> Optional[int]:
+    """Look up an application by path, or create it. Returns appID."""
+    db = getDB()
+    if db.connection is None:
+        return None
+    try:
+        cursor = db.connection.cursor()
+        cursor.execute("SELECT appID FROM application WHERE executablePath = ? LIMIT 1", (executablePath,))
+        row = cursor.fetchone()
+        if row:
+            cursor.close()
+            return row[0]
+        cursor.execute(
+            "INSERT INTO application (appName, executablePath) VALUES (?, ?)",
+            (appName, executablePath)
+        )
+        app_id = cursor.lastrowid
+        db.connection.commit()
+        cursor.close()
+        return app_id
+    except Exception as e:
+        print(f"Error in getOrCreateAppID: {e}")
+        return None
             
 #global instance
 spyglassDB: Optional[DatabaseManager] = None

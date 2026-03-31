@@ -8,10 +8,11 @@ from typing import Dict, Any, Optional
 
 from appMonitor import AppMonitor
 from keystroke_monitor import KeystrokeMonitor
-from database import DatabaseManager, updateKeystrokeSummaryTable
+from database import DatabaseManager, insertIntoKeystrokeSummaryTable
 from consent import ConsentScreen
 from adminHandler import AdminHandler
 from keylogger import Keylogger
+from alertEngine import AlertEngine
 from configSettings import create_config, ConfigSettings
 from userInfo import UserInfo
 
@@ -23,7 +24,9 @@ class Spyglass:
         self.database = None
         self.user_info: Optional[UserInfo] = None
         self.keylogger = None
+        self.alert_engine: Optional[AlertEngine] = None
         self.monitoring_level = None
+        self.monitoring_active = False
         self.is_running = False
     
     def run(self) -> bool:
@@ -70,17 +73,18 @@ class Spyglass:
         self.monitoring_level = self.consent.get_monitoring_level()
 
         # Log installed apps to DB
-        app_count = self.app_monitor.log_apps()
+        app_count = self.app_monitor.scan_and_log_installed_apps()
         logging.info(f"Installed apps logged to DB: {app_count}")
         self.is_running = True
+
+        # Create alert engine
+        user_id = self.user_info.info.get('hardware', {}).get('machine_id', '') if self.user_info else ''
+        self.alert_engine = AlertEngine(user_id)
         
         # Check if keylogging is enabled
         if self.config.is_keylogger_enabled():
             print("\nKeystroke logging is ENABLED (HIGH monitoring level)")
             logging.info("Keystroke logging is ENABLED")
-            
-            # Initialize keystroke monitor if high security
-            self.keystroke_monitor = KeystrokeMonitor()
         else:
             print("\nKeystroke logging is DISABLED (LOW monitoring level)")
             logging.info("Keystroke logging is DISABLED")
@@ -163,7 +167,7 @@ class Spyglass:
             user_info.save_to_file(system_info_path)
             logging.info(f"System information saved to: {system_info_path}")
 
-            self.database.UpdateUserTable(deviceInfo=device_info)
+            self.database.insertIntoUserTable(deviceInfo=device_info)
             self.user_info = user_info
             
             logging.info("Verifying database connection...")
@@ -179,186 +183,54 @@ class Spyglass:
             logging.error(f"Error setting up database: {e}", exc_info=True)
             return False
         
-    def start_app_monitoring(self, duration: int = 180) -> bool:
-        #Start application monitoring for specified duration
-        if not self.is_running:
-            print("Spyglass has not been initialized. Please run setup first.\n")
-            return False
-        
-        print("\n" + "="*70)
-        print("APP MONITORING TEST".center(70))
-        print("="*70 + "\n")
-        
-        print(f"Starting app monitoring for {duration} seconds...")
-        print("Switch between different applications. All app usage will be tracked.\n")
-        logging.info(f"Starting app monitoring for {duration} seconds")
-        
-        try:
-            if not self.app_monitor.start_monitoring():
-                print("Failed to start app monitoring.\n")
-                logging.error("Failed to start app monitoring")
-                return False
-            
-            print("App monitoring started.")
-            print(f"Monitoring will continue for {duration} seconds...\n")
-            logging.info("App monitoring successfully started")
-            
-            # Monitor for specified duration
-            for remaining in range(duration, 0, -1):
-                sys.stdout.write(f"\r⏱  Remaining time: {remaining:2d} seconds")
-                sys.stdout.flush()
-                time.sleep(1)
-            
-            sys.stdout.write("\r" + " " * 40 + "\r")  # Clear the line
-            
-            self.app_monitor.stop_monitoring()
-            print("\nApp monitoring stopped.\n")
-            logging.info("App monitoring stopped")
-            return True
-            
-        except Exception as e:
-            print(f"\nError during app monitoring: {e}\n")
-            logging.error(f"Error during app monitoring: {e}", exc_info=True)
-            return False
-    
-    def start_keylogger(self, duration: int = 180) -> bool:
-        """Start keystroke logging for specified duration"""
-        if not self.is_running:
-            print("Spyglass has not been initialized. Please run setup first.\n")
-            return False
-        return self.keylogger.start_keylogger(duration)
-    
-    def full_monitoring(self, duration: int = 180) -> bool:
-        #Start both app monitoring and keylogging together (HIGH security only)
-        if not self.is_running:
-            print("Spyglass has not been initialized. Please run setup first.\n")
-            return False
-        
-        if not self.config.is_keylogger_enabled():
-            print("\nIntegrated test requires HIGH monitoring level.")
-            print("Current level: LOW (app monitoring only)\n")
-            return False
-        
-        print("\n" + "="*70)
-        print("INTEGRATED MONITORING TEST (HIGH SECURITY)".center(70))
-        print("="*70 + "\n")
-        
-        print(f"Starting integrated monitoring for {duration} seconds...")
-        print("Switch between apps and type freely. All activity will be tracked.\n")
-        logging.info(f"Starting integrated monitoring for {duration} seconds")
-        
-        try:
-            # Start app monitoring
-            if not self.app_monitor.start_monitoring():
-                print("Failed to start app monitoring.\n")
-                return False
-            
-            # Start keystroke logging
-            if not self.keystroke_monitor.startLog():
-                print("Failed to start keystroke monitoring.\n")
-                self.app_monitor.stop_monitoring()
-                return False
-            
-            print("Integrated monitoring started (App + Keystroke).")
-            print(f"Monitoring will continue for {duration} seconds...\n")
-            logging.info("Integrated monitoring started successfully")
-            
-            # Monitor for specified duration
-            for remaining in range(duration, 0, -1):
-                sys.stdout.write(f"\r⏱  Remaining time: {remaining:2d} seconds")
-                sys.stdout.flush()
-                time.sleep(1)
-            
-            sys.stdout.write("\r" + " " * 40 + "\r")  # Clear the line
-            
-            # Save keystrokes before stopLog clears them
-            with self.keystroke_monitor.lock:
-                self.last_integrated_keystrokes = self.keystroke_monitor.keystrokes.copy()
-            
-            # Stop both monitors
-            self.app_monitor.stop_monitoring()
-            self.keystroke_monitor.stopLog()
-            
-            print("\nIntegrated monitoring stopped.\n")
-            
-            # Display results
-            self.display_keystroke_results()
-            return True
-            
-        except Exception as e:
-            print(f"\nError during integrated monitoring: {e}\n")
-            logging.error(f"Error during integrated monitoring: {e}", exc_info=True)
-            return False
-    
-    def display_keystroke_results(self) -> None:
-        """Display keystroke logging results"""
-        if not self.keystroke_monitor:
+    def start_all_monitoring(self) -> None:
+        #Start app monitoring, alert engine, and keystroke logging (if HIGH)
+        print("\nStarting monitoring...")
+        logging.info("Starting all monitoring...")
+        self.app_monitor.start_monitoring()
+        if self.config.is_keylogger_enabled():
+            self.keylogger.start_keylogger()
+        if self.alert_engine:
+            self.alert_engine.start()
+        self.monitoring_active = True
+        print("Monitoring is now ACTIVE.\n")
+        logging.info("All monitoring started")
+
+    def stop_all_monitoring(self) -> None:
+        #Stop all active monitoring
+        print("\nStopping monitoring...")
+        logging.info("Stopping all monitoring...")
+        self.app_monitor.stop_monitoring()
+        if self.config.is_keylogger_enabled():
+            self.keylogger.stop_keylogger()
+        if self.alert_engine:
+            self.alert_engine.stop()
+        self.monitoring_active = False
+        print("Monitoring stopped.\n")
+        logging.info("All monitoring stopped")
+
+    def show_reports(self) -> None:
+        #List report files in Reports directory
+        print("\n" + "=" * 70)
+        print("SPYGLASS REPORTS".center(70))
+        print("=" * 70 + "\n")
+        reports_dir = os.path.join(os.path.dirname(__file__), 'Reports')
+        if not os.path.isdir(reports_dir):
+            print("No reports directory found.\n")
             return
-        
-        keystroke_logger = logging.getLogger('keystrokes')
-        
-        with self.keystroke_monitor.lock:
-            keylogger_data = self.keystroke_monitor.keystrokes.copy()
-        
-        if not keylogger_data and hasattr(self, 'last_integrated_keystrokes'):
-            keylogger_data = self.last_integrated_keystrokes
-        
-        if not keylogger_data:
-            print("\nNo keystrokes were captured during this session.\n")
-            keystroke_logger.warning("No keystrokes captured")
+        files = sorted(os.listdir(reports_dir))
+        if not files:
+            print("No reports available.\n")
             return
-        
-        print("\n" + "="*70)
-        print("KEYSTROKE CAPTURE RESULTS".center(70))
-        print("="*70 + "\n")
-        
-        total_keys = sum(keylogger_data.values())
-        print(f"Total Keystrokes Captured: {total_keys}")
-        print(f"Unique Keys Pressed: {len(keylogger_data)}\n")
-        
-        print("Top 10 Most Pressed Keys:")
-        print("-" * 50)
-        
-        keystroke_logger.info("="*70)
-        keystroke_logger.info("KEYSTROKE CAPTURE RESULTS")
-        keystroke_logger.info("="*70)
-        keystroke_logger.info(f"Total Keystrokes: {total_keys}")
-        keystroke_logger.info(f"Unique Keys: {len(keylogger_data)}")
-        keystroke_logger.info("\nTop 10 Most Pressed Keys:")
-        
-        for key, count in sorted(keylogger_data.items(), key=lambda x: x[1], reverse=True)[:10]:
-            # Format key for display
-            key_display = key
-            if key == 'Key.space':
-                key_display = '[SPACE]'
-            elif key == 'Key.enter':
-                key_display = '[ENTER]'
-            elif key == 'Key.backspace':
-                key_display = '[BACKSPACE]'
-            elif key == 'Key.tab':
-                key_display = '[TAB]'
-            elif len(key) > 1 and key.startswith('Key.'):
-                key_display = f"[{key.replace('Key.', '').upper()}]"
-            else:
-                key_display = f"'{key}'"
-            
-            bar_length = int(count / max(keylogger_data.values()) * 40)
-            bar = "=" * bar_length
-            print(f"  {key_display:20s} {count:4d} {bar}")
-            keystroke_logger.info(f"  {key_display:20s} {count:4d}")
-        
-        keystroke_logger.info("="*70)
-        keystroke_logger.info(f"ALL CAPTURED KEYSTROKES ({len(keylogger_data)} unique keys):")
-        keystroke_logger.info("="*70)
-        for key, count in sorted(keylogger_data.items(), key=lambda x: x[1], reverse=True):
-            keystroke_logger.info(f"  {key}: {count}")
-        
-        print("\n" + "="*70 + "\n")
-    
+        for i, f in enumerate(files, 1):
+            print(f"  {i}. {f}")
+        print(f"\nTotal: {len(files)} report(s)\n")
+        print("=" * 70 + "\n")
+
     def show_menu(self) -> None:
-        #test menu
+        #Unified menu for LOW and HIGH monitoring
         while True:
-            print("="*70)
+            print("=" * 70)
             display_name = "User"
             if self.user_info and isinstance(self.user_info.info, dict):
                 sys_info = self.user_info.info.get('system', {})
@@ -374,61 +246,45 @@ class Spyglass:
                 elif isinstance(machine_id, str) and machine_id.strip():
                     display_name = machine_id
             print(f"WELCOME {display_name}".ljust(70))
-            print("="*70)
-            print(f"\nMonitoring Level: {self.monitoring_level}")
-            
-            if self.config.is_keylogger_enabled():
-                print(f"Security Mode: HIGH (App Monitoring + Keystroke Logging)\n")
-                print("1. Start App Monitoring Test (180 seconds)")
-                print("2. Start Keystroke Logging Test (180 seconds)")
-                print("3. Start Integrated Test - HIGH SECURITY (180 seconds)")
-                print("4. Show Current Settings")
-                print("5. View Installed Apps")
-                print("6. View Running Apps")
-                print("7. Exit Test\n")
-                
-                choice = input("Select option (1-7): ").strip()
-                
-                if choice == '1':
-                    self.start_app_monitoring(180)
-                elif choice == '2':
-                    self.start_keylogger(180)
-                elif choice == '3':
-                    self.full_monitoring(180)
-                elif choice == '4':
-                    self.config.print_settings()
-                elif choice == '5':
-                    self.show_installed_apps()
-                elif choice == '6':
-                    self.show_running_apps()
-                elif choice == '7':
-                    print("\nExiting Spyglass test...\n")
-                    break
+            print("=" * 70)
+
+            level = self.monitoring_level or "LOW"
+            mode = "HIGH (App Monitoring + Keystroke Logging)" if self.config.is_keylogger_enabled() else "LOW (App Monitoring Only)"
+            status = "ACTIVE" if self.monitoring_active else "INACTIVE"
+            print(f"\nMonitoring Level: {level}")
+            print(f"Security Mode: {mode}")
+            print(f"Monitoring Status: {status}\n")
+
+            toggle_label = "Stop Monitoring" if self.monitoring_active else "Start Monitoring"
+            print(f"1. {toggle_label}")
+            print("2. Show Current Settings")
+            print("3. View Installed Apps")
+            print("4. View Running Apps")
+            print("5. Show Reports")
+            print("6. Exit\n")
+
+            choice = input("Select option (1-6): ").strip()
+
+            if choice == '1':
+                if self.monitoring_active:
+                    self.stop_all_monitoring()
                 else:
-                    print("\nInvalid choice. Please select between 1-7.\n")
+                    self.start_all_monitoring()
+            elif choice == '2':
+                self.config.print_settings()
+            elif choice == '3':
+                self.show_installed_apps()
+            elif choice == '4':
+                self.show_running_apps()
+            elif choice == '5':
+                self.show_reports()
+            elif choice == '6':
+                if self.monitoring_active:
+                    self.stop_all_monitoring()
+                print("\nExiting Spyglass...\n")
+                break
             else:
-                print(f"Security Mode: LOW (App Monitoring Only)\n")
-                print("1. Start App Monitoring Test (180 seconds)")
-                print("2. Show Current Settings")
-                print("3. View Installed Apps")
-                print("4. View Running Apps")
-                print("5. Exit Test\n")
-                
-                choice = input("Select option (1-5): ").strip()
-                
-                if choice == '1':
-                    self.start_app_monitoring(180)
-                elif choice == '2':
-                    self.config.print_settings()
-                elif choice == '3':
-                    self.show_installed_apps()
-                elif choice == '4':
-                    self.show_running_apps()
-                elif choice == '5':
-                    print("\nExiting Spyglass test...\n")
-                    break
-                else:
-                    print("\nInvalid choice. Please select between 1-5.\n")
+                print("\nInvalid choice. Please select between 1-6.\n")
     
     def show_installed_apps(self) -> None:
         """Display applications logged in the database"""
@@ -504,12 +360,12 @@ class Spyglass:
     
     def cleanup(self) -> None:
         """Clean up resources"""
+        if self.monitoring_active:
+            self.stop_all_monitoring()
         if self.database:
             self.database.closeDB()
         if self.app_monitor:
             self.app_monitor.cleanup()
-        if self.keystroke_monitor and self.keystroke_monitor.listener:
-            self.keystroke_monitor.stopLog()
 
 
 def main():

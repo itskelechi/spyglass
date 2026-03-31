@@ -5,7 +5,7 @@ import time
 import os
 
 from keystroke_monitor import KeystrokeMonitor
-from database import DatabaseManager, updateKeystrokeSummaryTable
+from database import DatabaseManager, insertIntoKeystrokeSummaryTable
 
 class Keylogger:
     def __init__(self, app=None):
@@ -17,6 +17,7 @@ class Keylogger:
         self.last_session_keystrokes = {}
         self.monitoring_level = getattr(app, 'monitoring_level', None)
         self.is_running = False
+        self.start_time = None
     
     def run(self) -> bool:
         #Run the complete keylogger flow
@@ -38,76 +39,65 @@ class Keylogger:
         return True
     
     
-    def start_keylogger(self, duration: int = 180) -> bool:
-        # Start keystroke logging# 
+    def start_keylogger(self) -> bool:
+        # Start keystroke logging
         if not self.config.is_keylogger_enabled():
             print("\nKeystroke logging is not enabled.\n Monitoring Level: LOW")
-            print("To enable keystroke logging, restart the app and select HIGH monitoring level.\n") # change with config setting
+            print("To enable keystroke logging, restart the app and select HIGH monitoring level.\n")
             logging.warning("Keystroke logging is disabled. Monitoring level: LOW")
             return False
-        
+
         print("\n" + "="*70)
         print("KEYSTROKE LOGGER".center(70))
         print("="*70 + "\n")
-        
-        print(f"Starting keystroke monitoring for {duration} seconds...")
-        print("Type freely on your keyboard. All keystrokes will be captured and logged.\n")
-        logging.info(f"Starting keystroke monitoring for {duration} seconds")
-        
+
+        print("Starting keystroke monitoring...")
+        logging.info("Starting keystroke monitoring")
+
         try:
             self.keylogger = KeystrokeMonitor()
-            
+
             if not self.keylogger.startLog():
                 print("Failed to start keystroke monitoring.\n")
                 logging.error("Failed to start keystroke monitoring")
                 return False
-            
-            print("Keystroke monitoring started.")
-            print(f"Monitoring will continue for {duration} seconds...\n")
+
+            self.is_running = True
+            self.start_time = datetime.datetime.now()
+            print("Keystroke monitoring started. Use 'Stop Monitoring' to end.\n")
             logging.info("Keystroke monitoring successfully started")
-            
-            # Monitor for specified duration
-            for remaining in range(duration, 0, -1):
-                sys.stdout.write(f"\r⏱  Remaining time: {remaining:2d} seconds")
-                sys.stdout.flush()
-                time.sleep(1)
-                
-                # Debug: Check if keystrokes are being captured
-                if remaining % 10 == 0:
-                    with self.keylogger.lock:
-                        logging.debug(f"DEBUG: Current keystroke count: {len(self.keylogger.keystrokes)} keys, Last key: {self.keylogger.last_key}")
-            
-            sys.stdout.write("\r" + " " * 40 + "\r")  # Clear the line
-            
-            # Final debug before stopping
-            with self.keylogger.lock:
-                self.last_session_keystrokes = self.keylogger.keystrokes.copy()
-                logging.info(f"DEBUG: Final keystroke count before stop: {len(self.last_session_keystrokes)} keys")
-                logging.info(f"DEBUG: Keystroke data: {self.last_session_keystrokes}")
-                
-            
-            self.keylogger.stopLog()
-            logging.info("Keystroke monitoring stopped")
-            print("\nKeystroke monitoring stopped.\n")
-            self.update_keystroke_summaryDB(duration=duration)
-            
-            # Display results
-            self.display_keylogger_results()
-            
-            # Flush logging to ensure it's written
-            for handler in logging.root.handlers:
-                handler.flush()
-            
-            # Flush keystroke logger
-            keystroke_logger = logging.getLogger('keystrokes')
-            for handler in keystroke_logger.handlers:
-                handler.flush()
-            
             return True
         except Exception as e:
-            print(f"\nError during keystroke test: {e}\n")
-            logging.error(f"Error during keystroke test: {e}", exc_info=True)
+            print(f"\nError starting keystroke monitoring: {e}\n")
+            logging.error(f"Error starting keystroke monitoring: {e}", exc_info=True)
             return False
+
+    def stop_keylogger(self) -> bool:
+        # Stop keystroke logging on demand
+        if not self.is_running or not self.keylogger:
+            logging.warning("Keystroke monitoring is not running.")
+            return False
+
+        with self.keylogger.lock:
+            self.last_session_keystrokes = self.keylogger.keystrokes.copy()
+
+        self.keylogger.stopLog()
+        self.is_running = False
+        elapsed = int((datetime.datetime.now() - self.start_time).total_seconds()) if self.start_time else 0
+        logging.info("Keystroke monitoring stopped")
+        print("\nKeystroke monitoring stopped.\n")
+
+        self.update_keystroke_summaryDB(duration=elapsed)
+        self.display_keylogger_results()
+
+        # Flush logging
+        for handler in logging.root.handlers:
+            handler.flush()
+        keystroke_logger = logging.getLogger('keystrokes')
+        for handler in keystroke_logger.handlers:
+            handler.flush()
+
+        return True
     
     def display_keylogger_results(self) -> None:
         # Display keystroke logging results# 
@@ -177,39 +167,6 @@ class Keylogger:
             keystroke_logger.info(f"  {key}: {count}")
         
         print("\n" + "="*70 + "\n")
-    
-        # Show test menu# 
-        while True:
-            print("="*70)
-            print("KEYSTROKE LOGGING TEST MENU".center(70))
-            print("="*70)
-            print(f"\nMonitoring Level: {self.monitoring_level}")
-            print(f"Keystroke Logging: {'ENABLED' if self.config.is_keylogger_enabled() else 'DISABLED'}\n")
-            
-            print("1. Start Keystroke Test (30 seconds)")
-            print("2. Start Keystroke Test (60 seconds)")
-            print("3. Show Current Settings")
-            print("4. Exit Test\n")
-            
-            choice = input("Select option (1-4): ").strip()
-            
-            if choice == '1':
-                self.start_keylogger(30)  # 30 seconds
-            elif choice == '2':
-                self.start_keylogger(60)  # 60 seconds
-            elif choice == '3':
-                self.config.print_settings()
-            elif choice == '4':
-                print("\nExiting keystroke test...\n")
-                break
-            else:
-                print("\nInvalid choice. Please select between 1-4.\n")
-    
-        # Clean up resources# 
-        if self.database:
-            self.database.closeDB()
-        if self.keylogger and self.keylogger.listener:
-            self.keylogger.stopLog()
 
     def resolve_user_id(self):
         if not self.database or not getattr(self.database, 'connection', None):
@@ -300,7 +257,7 @@ class Keylogger:
         interval_end = datetime.datetime.now()
         interval_start = interval_end - datetime.timedelta(seconds=duration)
 
-        success = updateKeystrokeSummaryTable(
+        success = insertIntoKeystrokeSummaryTable(
             eventID=event_id,
             intervalStart=interval_start.isoformat(timespec='seconds'),
             intervalEnd=interval_end.isoformat(timespec='seconds'),
