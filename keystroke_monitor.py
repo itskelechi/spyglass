@@ -10,7 +10,7 @@ import threading
 class KeystrokeMonitor:
     #Monitor keystrokes
     
-    def __init__(self, time_interval: int = 60, log_file: str = "keystrokes.log"):
+    def __init__(self, time_interval: int = 60, log_file: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Reports', 'keystrokes.log')):
         print("Initializing KeystrokeMonitor...")
         
         self.running = False

