@@ -1,0 +1,169 @@
+2026-03-31 00:11:54,785 - INFO - ======================================================================
+2026-03-31 00:11:54,785 - INFO - SPYGLASS TEST STARTED
+2026-03-31 00:11:54,785 - INFO - ======================================================================
+2026-03-31 00:11:54,785 - INFO - Application log: C:\Users\xavie\Desktop\Spyglass\Reports\spyglass_test_2026-03-31_00-11-54.log
+2026-03-31 00:11:54,785 - INFO - Keystroke log: C:\Users\xavie\Desktop\Spyglass\Reports\keystrokes_2026-03-31_00-11-54.log
+2026-03-31 00:11:54,785 - INFO - Initializing Spyglass test...
+2026-03-31 00:11:54,786 - INFO - Running Spyglass setup...
+2026-03-31 00:11:54,786 - INFO - Initializing...
+2026-03-31 00:11:54,786 - INFO - Starting APP setup - Checking admin privileges...
+2026-03-31 00:11:54,786 - INFO - Checking admin privileges...
+2026-03-31 00:11:54,787 - INFO - Administrator privileges confirmed
+2026-03-31 00:11:54,787 - INFO - Administrator privileges verified
+2026-03-31 00:11:54,787 - INFO - Getting User consent...
+2026-03-31 00:11:54,787 - INFO - Creating ConsentScreen...
+2026-03-31 00:11:54,787 - INFO - Displaying consent screen...
+2026-03-31 00:11:57,276 - INFO - Consent received with monitoring level: HIGH
+2026-03-31 00:11:57,276 - INFO - User consent obtained
+2026-03-31 00:11:57,276 - INFO - Setting up configuration...
+2026-03-31 00:11:57,276 - INFO - Creating config with monitoring level: HIGH
+2026-03-31 00:11:57,279 - INFO - Configuration setup complete
+2026-03-31 00:11:57,279 - INFO - Setting up database...
+2026-03-31 00:11:59,543 - INFO - System information saved to: C:\Users\xavie\Desktop\Spyglass\system_info.json
+2026-03-31 00:11:59,549 - INFO - Database setup complete
+2026-03-31 00:11:59,549 - INFO - Database setup initialized successfully
+2026-03-31 00:12:18,163 - INFO - Logged 111/111 installed apps
+2026-03-31 00:12:18,163 - INFO - Installed apps logged to DB: 111
+2026-03-31 00:12:18,163 - INFO - Keystroke logging is ENABLED
+2026-03-31 00:12:18,163 - INFO - Setup completed successfully. Showing a menu...
+2026-03-31 00:12:46,163 - INFO - Starting integrated monitoring for 180 seconds
+2026-03-31 00:12:46,163 - INFO - Entering app monitor loop
+2026-03-31 00:12:46,163 - INFO - App monitor thread started
+2026-03-31 00:12:46,163 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:12:46,625 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=251 | More than 100 processes are running simultaneously.
+2026-03-31 00:12:46,629 - INFO - Integrated monitoring started successfully
+2026-03-31 00:12:50,635 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:12:55,074 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:12:59,504 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:13:03,941 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:13:08,373 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:13:12,794 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:13:13,213 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=251 | More than 100 processes are running simultaneously.
+2026-03-31 00:13:17,219 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:13:17,634 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1957.9 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:13:17,635 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1957.9 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:13:21,640 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:13:26,038 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:13:30,443 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:13:34,835 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:13:39,219 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:13:39,615 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=248 | More than 100 processes are running simultaneously.
+2026-03-31 00:13:43,622 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:13:44,032 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1939.5 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:13:44,034 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1939.5 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:13:48,048 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:13:52,458 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:13:56,901 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:14:01,344 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:14:05,849 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:14:06,364 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=248 | More than 100 processes are running simultaneously.
+2026-03-31 00:14:10,378 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:14:10,878 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1857.3 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:14:10,879 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1857.3 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:14:14,898 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:14:19,430 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:14:24,081 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:14:28,596 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:14:33,079 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:14:33,511 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=247 | More than 100 processes are running simultaneously.
+2026-03-31 00:14:37,522 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:14:37,980 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1972.8 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:14:37,982 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1972.8 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:14:41,997 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:14:46,372 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:14:50,747 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:14:55,139 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:14:59,526 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:14:59,901 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=248 | More than 100 processes are running simultaneously.
+2026-03-31 00:14:59,902 - WARNING - [ALERT] Suspicious Application | severity=medium | module=application | app=Discord.exe | threshold=unknown_app_min_cpu_percent=6 | observed=8.2 | Unknown application detected: Discord.exe
+2026-03-31 00:15:03,920 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:15:04,300 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1969.2 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:15:04,300 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1969.2 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:15:08,321 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:15:12,702 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:15:17,079 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:15:21,467 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:15:25,917 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:15:26,332 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=248 | More than 100 processes are running simultaneously.
+2026-03-31 00:15:30,339 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:15:30,794 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1915.5 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:15:30,794 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1915.5 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:15:34,795 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:15:39,235 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:15:43,741 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:15:47,270 - INFO - Stopping app monitor...
+2026-03-31 00:15:48,287 - INFO - App monitor thread stopped
+2026-03-31 00:15:48,289 - WARNING - No keystrokes captured
+2026-03-31 00:17:21,634 - INFO - Starting integrated monitoring for 180 seconds
+2026-03-31 00:17:21,634 - INFO - Entering app monitor loop
+2026-03-31 00:17:21,634 - INFO - App monitor thread started
+2026-03-31 00:17:21,635 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:17:22,007 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=249 | More than 100 processes are running simultaneously.
+2026-03-31 00:17:22,007 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1932.3 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:17:22,007 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1932.3 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:17:22,035 - INFO - Integrated monitoring started successfully
+2026-03-31 00:17:26,010 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:17:30,409 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:17:34,805 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:17:39,249 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:17:43,657 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:17:48,084 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:17:48,476 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=247 | More than 100 processes are running simultaneously.
+2026-03-31 00:17:48,477 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1840.2 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:17:48,477 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1840.2 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:17:52,481 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:17:56,874 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:18:01,340 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:18:05,736 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:18:10,157 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:18:14,617 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:18:15,000 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=248 | More than 100 processes are running simultaneously.
+2026-03-31 00:18:15,000 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1952.3 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:18:15,000 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1952.3 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:18:15,000 - WARNING - [ALERT] Suspicious Application | severity=medium | module=application | app=Discord.exe | threshold=unknown_app_min_cpu_percent=6 | observed=9.9 | Unknown application detected: Discord.exe
+2026-03-31 00:18:19,021 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:18:23,408 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:18:27,844 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:18:32,283 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:18:36,767 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:18:41,205 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:18:41,615 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=247 | More than 100 processes are running simultaneously.
+2026-03-31 00:18:41,615 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1980.5 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:18:41,616 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1980.5 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:18:45,627 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:18:50,002 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:18:54,407 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:18:58,814 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:19:03,188 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:19:07,592 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:19:08,000 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=254 | More than 100 processes are running simultaneously.
+2026-03-31 00:19:08,000 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1899.0 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:19:08,000 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1899.0 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:19:12,011 - INFO - Active app changed: Discord.exe | #general-chat | Zaddy's Server - Discord
+2026-03-31 00:19:12,409 - WARNING - [ALERT] Suspicious Application | severity=medium | module=application | app=Discord.exe | threshold=unknown_app_min_cpu_percent=6 | observed=1.1 | Unknown application detected: Discord.exe
+2026-03-31 00:19:16,426 - INFO - Active app changed: Discord.exe | #general-chat | Zaddy's Server - Discord
+2026-03-31 00:19:20,883 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:19:21,325 - WARNING - [ALERT] Suspicious Application | severity=medium | module=application | app=MsMpEng.exe | threshold=unknown_app_min_cpu_percent=6 | observed=105.9 | Unknown application detected: MsMpEng.exe
+2026-03-31 00:19:25,362 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:19:29,868 - INFO - Active app changed: Discord.exe | #general-chat | Zaddy's Server - Discord
+2026-03-31 00:19:34,527 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:19:34,939 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=257 | More than 100 processes are running simultaneously.
+2026-03-31 00:19:34,939 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1955.8 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:19:34,939 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1955.8 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:19:38,948 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:19:43,389 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:19:47,806 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:19:52,216 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:19:56,639 - INFO - Active app changed: explorer.exe | 
+2026-03-31 00:20:01,113 - INFO - Active app changed: Discord.exe | #general-chat | Zaddy's Server - Discord
+2026-03-31 00:20:01,532 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=100 | observed=256 | More than 100 processes are running simultaneously.
+2026-03-31 00:20:01,532 - WARNING - [ALERT] Performance Risk | severity=high | module=application | app=System Idle Process | threshold=app_cpu_percent=80 | observed=1949.6 | System Idle Process has exceeded the CPU threshold for an extended period.
+2026-03-31 00:20:01,532 - WARNING - [ALERT] Hidden Activity | severity=high | module=application | app=System Idle Process | threshold=background_cpu_percent=50 | observed=1949.6 | Background process System Idle Process is using unusually high CPU.
+2026-03-31 00:20:01,532 - WARNING - [ALERT] Suspicious Application | severity=medium | module=application | app=Discord.exe | threshold=unknown_app_min_cpu_percent=6 | observed=2.8 | Unknown application detected: Discord.exe
+2026-03-31 00:20:05,551 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:20:10,015 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:20:14,454 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:20:18,860 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:20:22,697 - INFO - Stopping app monitor...
+2026-03-31 00:20:23,264 - INFO - App monitor thread stopped
+2026-03-31 00:20:23,264 - WARNING - No keystrokes captured

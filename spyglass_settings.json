@@ -1,6 +1,6 @@
 {
-  "monitoring_level": "LOW",
-  "keystroke_logging_enabled": false,
+  "monitoring_level": "HIGH",
+  "keystroke_logging_enabled": true,
   "app_monitoring_enabled": true,
   "screenshot_interval": 0,
   "video_recording_enabled": false,

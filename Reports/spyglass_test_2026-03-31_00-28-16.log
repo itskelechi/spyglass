@@ -1,0 +1,79 @@
+2026-03-31 00:28:16,194 - INFO - ======================================================================
+2026-03-31 00:28:16,194 - INFO - SPYGLASS TEST STARTED
+2026-03-31 00:28:16,195 - INFO - ======================================================================
+2026-03-31 00:28:16,195 - INFO - Application log: C:\Users\xavie\Desktop\Spyglass\Reports\spyglass_test_2026-03-31_00-28-16.log
+2026-03-31 00:28:16,195 - INFO - Keystroke log: C:\Users\xavie\Desktop\Spyglass\Reports\keystrokes_2026-03-31_00-28-16.log
+2026-03-31 00:28:16,195 - INFO - Initializing Spyglass test...
+2026-03-31 00:28:16,195 - INFO - Running Spyglass setup...
+2026-03-31 00:28:16,195 - INFO - Initializing...
+2026-03-31 00:28:16,195 - INFO - Starting APP setup - Checking admin privileges...
+2026-03-31 00:28:16,195 - INFO - Checking admin privileges...
+2026-03-31 00:28:16,195 - INFO - Administrator privileges confirmed
+2026-03-31 00:28:16,195 - INFO - Administrator privileges verified
+2026-03-31 00:28:16,196 - INFO - Getting User consent...
+2026-03-31 00:28:16,196 - INFO - Creating ConsentScreen...
+2026-03-31 00:28:16,196 - INFO - Displaying consent screen...
+2026-03-31 00:28:19,068 - INFO - Consent received with monitoring level: HIGH
+2026-03-31 00:28:19,068 - INFO - User consent obtained
+2026-03-31 00:28:19,069 - INFO - Setting up configuration...
+2026-03-31 00:28:19,069 - INFO - Creating config with monitoring level: HIGH
+2026-03-31 00:28:19,076 - INFO - Configuration setup complete
+2026-03-31 00:28:19,076 - INFO - Setting up database...
+2026-03-31 00:28:22,220 - INFO - System information saved to: C:\Users\xavie\Desktop\Spyglass\system_info.json
+2026-03-31 00:28:22,220 - INFO - Database setup complete
+2026-03-31 00:28:22,220 - INFO - Database setup initialized successfully
+2026-03-31 00:28:22,408 - INFO - Logged 111/111 installed apps
+2026-03-31 00:28:22,408 - INFO - Installed apps logged to DB: 111
+2026-03-31 00:28:22,409 - INFO - Keystroke logging is ENABLED
+2026-03-31 00:28:22,409 - INFO - Setup completed successfully. Showing a menu...
+2026-03-31 00:28:24,624 - INFO - Starting integrated monitoring for 180 seconds
+2026-03-31 00:28:24,625 - INFO - Entering app monitor loop
+2026-03-31 00:28:24,625 - INFO - App monitor thread started
+2026-03-31 00:28:24,625 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:28:25,070 - INFO - Integrated monitoring started successfully
+2026-03-31 00:28:29,076 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:28:33,525 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:28:37,932 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:28:42,340 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:28:46,745 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:28:51,163 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:28:51,561 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=180 | observed=253 | More than 180 processes are running simultaneously.
+2026-03-31 00:28:55,586 - INFO - Active app changed: python.exe | SpyGlass Alert
+2026-03-31 00:29:00,006 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:29:04,399 - INFO - Active app changed: Discord.exe | #general-chat | Zaddy's Server - Discord
+2026-03-31 00:29:09,032 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:29:13,428 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:29:17,813 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:29:22,239 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:29:26,653 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:29:31,129 - INFO - Active app changed: chrome.exe | The dad who vanished just reappeared 😭#shorts - YouTube - Google Chrome
+2026-03-31 00:29:35,781 - INFO - Active app changed: explorer.exe | 
+2026-03-31 00:29:40,510 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:29:45,072 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:29:49,596 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:29:54,157 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:29:54,714 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=180 | observed=250 | More than 180 processes are running simultaneously.
+2026-03-31 00:29:58,718 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:03,305 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:07,875 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:12,469 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:16,961 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:21,595 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:26,218 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:30,705 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:35,126 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:39,657 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:44,126 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:48,565 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:53,079 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:57,561 - INFO - Active app changed: chrome.exe | Information for Python Tasks - Google Chrome
+2026-03-31 00:30:58,210 - WARNING - [ALERT] System Overload | severity=medium | module=application | app=System | threshold=process_count=180 | observed=249 | More than 180 processes are running simultaneously.
+2026-03-31 00:31:02,220 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:31:06,658 - INFO - Active app changed: python.exe | Administrator: C:\Users\xavie\AppData\Local\Programs\Python\Python311\python.exe
+2026-03-31 00:31:11,041 - INFO - Active app changed: Discord.exe | #general-chat | Zaddy's Server - Discord
+2026-03-31 00:31:15,896 - INFO - Active app changed: explorer.exe | Program Manager
+2026-03-31 00:31:20,433 - INFO - Active app changed: explorer.exe | Program Manager
+2026-03-31 00:31:24,967 - INFO - Active app changed: explorer.exe | Program Manager
+2026-03-31 00:31:25,802 - INFO - Stopping app monitor...
+2026-03-31 00:31:29,410 - INFO - App monitor thread stopped
+2026-03-31 00:31:29,410 - WARNING - No keystrokes captured
