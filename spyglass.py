@@ -31,14 +31,12 @@ class Spyglass:
     
     def run(self) -> bool:
         #Run the complete Spyglass a setup
-        
         print("\n" + "="*70)
         print("WELCOME TO SPYGLASS".center(70))
         print("="*70 + "\n")
         
         # STARTING SPYGLASS
         logging.info("Initializing...")
-        
         logging.info("Starting APP setup - Checking admin privileges...")
         if not self.verify_admin():
             logging.error("Administrator privileges verification failed.")
@@ -186,7 +184,7 @@ class Spyglass:
     def start_all_monitoring(self) -> None:
         #Start app monitoring, alert engine, and keystroke logging (if HIGH)
         print("\nStarting monitoring...")
-        logging.info("Starting all monitoring...")
+        logging.info("Starting System monitoring...")
         self.app_monitor.start_monitoring()
         if self.config.is_keylogger_enabled():
             self.keylogger.start_keylogger()
@@ -194,12 +192,12 @@ class Spyglass:
             self.alert_engine.start()
         self.monitoring_active = True
         print("Monitoring is now ACTIVE.\n")
-        logging.info("All monitoring started")
+        logging.info("System monitoring started")
 
     def stop_all_monitoring(self) -> None:
         #Stop all active monitoring
         print("\nStopping monitoring...")
-        logging.info("Stopping all monitoring...")
+        logging.info("Stopping System monitoring...")
         self.app_monitor.stop_monitoring()
         if self.config.is_keylogger_enabled():
             self.keylogger.stop_keylogger()
@@ -207,7 +205,7 @@ class Spyglass:
             self.alert_engine.stop()
         self.monitoring_active = False
         print("Monitoring stopped.\n")
-        logging.info("All monitoring stopped")
+        logging.info("System monitoring stopped")
 
     def show_reports(self) -> None:
         #List report files in Reports directory
@@ -263,13 +261,12 @@ class Spyglass:
             print("5. Show Reports")
             print("6. Exit\n")
 
-            choice = input("Select option (1-6): ").strip()
+            choice = input("Select option (1-6): ").strip().lower()
 
-            if choice == '1':
-                if self.monitoring_active:
-                    self.stop_all_monitoring()
-                else:
-                    self.start_all_monitoring()
+            if choice in ('1', 'stop') and self.monitoring_active:
+                self.stop_all_monitoring()
+            elif choice == '1':
+                self.start_all_monitoring()
             elif choice == '2':
                 self.config.print_settings()
             elif choice == '3':
@@ -278,7 +275,7 @@ class Spyglass:
                 self.show_running_apps()
             elif choice == '5':
                 self.show_reports()
-            elif choice == '6':
+            elif choice in ('6','stop'):
                 if self.monitoring_active:
                     self.stop_all_monitoring()
                 print("\nExiting Spyglass...\n")
@@ -377,7 +374,7 @@ def main():
    
     # make the folder if it doesn't exist
     os.makedirs(reports_dir, exist_ok=True)
-    log_file = os.path.join(reports_dir, f'spyglass_test_{timestamp}.log')
+    log_file = os.path.join(reports_dir, f'spyglass_{timestamp}.log')
     keystroke_log_file = os.path.join(reports_dir, f'keystrokes_{timestamp}.log')
     
     # Create separate loggers for application activity and keystroke data

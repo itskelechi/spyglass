@@ -126,11 +126,15 @@ class AlertEngine:
         #CRITICAL - BLOCKLISTED APPS
         for script in scripts:
             if script['name'].lower() in BLOCKLISTED_APPS:
+                if script['name'].lower() in {'spyglass.exe', 'spyglass.py'}:
+                    msg = f"SPYGLASS is Actively Monitoring"
+                else:
+                    msg = f"Blocklisted app detected: {script['name']} (PID {script['pid']})"
                 self.raise_alert(
                     CRITICAL_SECURITY,
                     alert_type="Blocklisted App Detected",
                     key=f"Blocklist_{script['name']}",
-                    message=f"Blocklisted app detected: {script['name']} (PID {script['pid']})",
+                    message=msg,
                     app_name=script['name'], exe_path=script.get('exe', ''))
 
         #CRITICAL - password fields detected
