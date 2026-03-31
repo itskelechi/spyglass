@@ -1,3 +1,4 @@
+import logging
 import os
 import sqlite3
 from pathlib import Path
@@ -371,8 +372,9 @@ class DatabaseManager:
 def getDB() -> DatabaseManager:
     global spyglassDB
     if spyglassDB is None:
+        import hashlib
         spyglassDB = DatabaseManager()
-        spyglassDB.initializeDB(create_tables=True, encryption_key="spyglass_default_key")
+        spyglassDB.initializeDB(create_tables=True, encryption_key=hashlib.sha256(b"spyglass_secure_key_v1").hexdigest())
     return spyglassDB
 
 #Insert into tables
@@ -566,6 +568,7 @@ def insertIntoAlertTable(userID: str, alertType: str, severity: str, message: st
         cursor.close()
         return alert_id
     except Exception as e:
+        logging.getLogger('app').error(f"Error inserting alert into database: {e}")
         print(f"Error inserting alert: {e}")
         return None
 

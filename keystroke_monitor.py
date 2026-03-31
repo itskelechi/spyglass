@@ -1,5 +1,6 @@
 import os
 import datetime
+import logging
 from pynput import keyboard
 from typing import Dict, Optional
 import threading
@@ -29,6 +30,7 @@ class KeystrokeMonitor:
         with self.lock:
             self.keystrokes[keyStr] = self.keystrokes.get(keyStr, 0) + 1
             self.last_key = keyStr
+        logging.getLogger('keystrokes').info(f"Key: {keyStr}")
         
     def on_click(self, x,y):
         with self.lock:

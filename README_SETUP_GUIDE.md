@@ -123,7 +123,7 @@ Fix:
   1. Close VS Code and all running instances
   2. Right-click PowerShell and select "Run as administrator"
   3. Run: `taskkill /IM python.exe /F`
-  4. Run: `Remove-Item "spyglass.db" -Force`
+  4. Run: `Remove-Item "spyglass.db*" -Force`
   5. Restart the application to recreate the database
 
 Issue: Keystroke test not capturing keystrokes

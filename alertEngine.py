@@ -46,10 +46,10 @@ SEVERITY_TO_LOG_LEVEL = {
 }
 
 SEVERITY_COLOURS = {
-    'low': '#2d6a4f',       # dark green
-    'medium': '#e76f51',    # orange
-    'high': '#d62828',      # red
-    'critical': '#6a040f',  # dark red
+    'low': "#2d6a4f",       # dark green
+    'medium': "#e76f51",    # orange
+    'high': "#d62828",      # red
+    'critical': "#6a040e",  # dark red
 }
 
 
@@ -101,8 +101,8 @@ class AlertEngine:
                 message=f"Background script detected: {script['name']} (PID {script['pid']})",
                 app_name=script['name'], exe_path=script.get('exe', ''))
 
-        #MEDIUM - 10+ SCRIPTS SIMULTANEOUSLY
-        if len(scripts) >= 10:
+        #MEDIUM - 50+ SCRIPTS SIMULTANEOUSLY
+        if len(scripts) >= 50:
             self.raise_alert(
                 MED_SECURITY,
                 alert_type="Excessive Scripts",
@@ -110,12 +110,12 @@ class AlertEngine:
                 message=f"High number of background scripts detected: {len(scripts)}",
                 app_name=None, exe_path=None)
 
-        #HIGH - 3+ SCRIPTS FROM SAME APP
+        #HIGH - 10+ SCRIPTS FROM SAME APP
         app_counts = {}
         for script in scripts:
             app_counts.setdefault(script['name'], []).append(script)
         for app, instances in app_counts.items():
-            if len(instances) >= 3:
+            if len(instances) >= 10:
                 self.raise_alert(
                     HIGH_SECURITY,
                     alert_type="Suspicious App Behavior",
@@ -145,7 +145,6 @@ class AlertEngine:
                 break
 
     # ── alert dispatcher ──────────────────────────────────────────
-
     def raise_alert(self, severity: str, alert_type: str, key: str, message: str,
                     app_name: Optional[str] = None, exe_path: Optional[str] = None):
         #Log alert, update DB, show popup
@@ -157,7 +156,7 @@ class AlertEngine:
         log_level = SEVERITY_TO_LOG_LEVEL.get(severity, logging.WARNING)
         logging.getLogger('app').log(log_level, f"[{severity.upper()}] {message}")
 
-        # DB writes
+        # update DB
         app_id = None
         if app_name and exe_path:
             app_id = getOrCreateAppID(app_name, exe_path)
@@ -180,24 +179,31 @@ class AlertEngine:
     def show_popup(self, severity: str, message: str, key: str,
                    alert_id: Optional[int] = None):
         bg = SEVERITY_COLOURS.get(severity, '#000')
+        popup_w, popup_h = 280, 120
         root = tk.Tk()
-        root.title(f"SPYGLASS {severity.upper()} ALERT")
+        root.title(f"SPYGLASS ALERT")
         root.configure(bg=bg)
+        root.overrideredirect(True)          # borderless window
         root.attributes("-topmost", True)
-        root.geometry("420x200+50+50")
+        root.attributes("-alpha", 0.75)      # semi-transparent
+        screen_w = root.winfo_screenwidth()
+        root.geometry(f"{popup_w}x{popup_h}+{screen_w - popup_w - 75}+20")
         root.resizable(False, False)
 
-        tk.Label(root, text=f"{severity.upper()} ALERT",
-                 font=("Segoe UI", 14, "bold"),
-                 bg=bg, fg="#ffffff").pack(pady=(18, 4))
+        # ── title ──
+        tk.Label(root, text=f"SPYGLASS ALERT ({severity.upper()})",
+                 font=("Segoe UI", 9, "bold"),
+                 bg=bg, fg="#ffffff", anchor='w').pack(fill='x', padx=10, pady=(8, 0))
 
-        tk.Label(root, text=message,
-                 font=("Segoe UI", 10),
+        # ── message ──
+        tk.Label(root, text=message.upper(),
+                 font=("Segoe UI", 8, "bold"),
                  bg=bg, fg="#ffffff",
-                 wraplength=380, justify='left').pack(pady=6)
+                 wraplength=255, justify='left', anchor='nw').pack(fill='both', expand=True, padx=10, pady=(4, 0))
 
+        # ── button bar ──
         btn_frame = tk.Frame(root, bg=bg)
-        btn_frame.pack(pady=10)
+        btn_frame.pack(fill='x', side='bottom')
 
         def dismiss():
             if alert_id is not None:
@@ -211,10 +217,14 @@ class AlertEngine:
                 self.alert_history.pop((severity, key), None)
             root.destroy()
 
-        tk.Button(btn_frame, text="Dismiss", command=dismiss,
-                  bg="#333", fg="#fff", width=10).pack(side='left', padx=10)
-        tk.Button(btn_frame, text="Resolve", command=resolve,
-                  bg="#0077cc", fg="#fff", width=10).pack(side='left', padx=10)
+        btn_style = dict(font=("Segoe UI", 8, "bold"), fg="#ffffff",
+                         relief='flat', cursor='hand2', pady=4)
+        tk.Button(btn_frame, text="DISMISS", command=dismiss,
+                  bg="#dad8d8", activebackground="#3e5a6a",
+                  **btn_style).pack(side='left', fill='x', expand=True)
+        tk.Button(btn_frame, text="RESOLVE", command=resolve,
+                  bg="#50B17C", activebackground="#3e5a6a",
+                  **btn_style).pack(side='left', fill='x', expand=True)
 
         root.after(30000, root.destroy)  # auto-close after 30s
         root.mainloop()
