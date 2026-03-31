@@ -1,0 +1,50 @@
+2026-03-30 23:57:22,536 - INFO - ======================================================================
+2026-03-30 23:57:22,536 - INFO - SPYGLASS TEST STARTED
+2026-03-30 23:57:22,536 - INFO - ======================================================================
+2026-03-30 23:57:22,536 - INFO - Application log: C:\Users\xavie\Desktop\Spyglass\Reports\spyglass_test_2026-03-30_23-57-22.log
+2026-03-30 23:57:22,536 - INFO - Keystroke log: C:\Users\xavie\Desktop\Spyglass\Reports\keystrokes_2026-03-30_23-57-22.log
+2026-03-30 23:57:22,536 - INFO - Initializing Spyglass test...
+2026-03-30 23:57:22,536 - INFO - Running Spyglass setup...
+2026-03-30 23:57:22,537 - INFO - Initializing...
+2026-03-30 23:57:22,537 - INFO - Starting APP setup - Checking admin privileges...
+2026-03-30 23:57:22,537 - INFO - Checking admin privileges...
+2026-03-30 23:57:22,537 - INFO - Administrator privileges confirmed
+2026-03-30 23:57:22,538 - INFO - Administrator privileges verified
+2026-03-30 23:57:22,538 - INFO - Getting User consent...
+2026-03-30 23:57:22,538 - INFO - Creating ConsentScreen...
+2026-03-30 23:57:22,538 - INFO - Displaying consent screen...
+2026-03-30 23:57:24,704 - INFO - Consent received with monitoring level: HIGH
+2026-03-30 23:57:24,704 - INFO - User consent obtained
+2026-03-30 23:57:24,704 - INFO - Setting up configuration...
+2026-03-30 23:57:24,704 - INFO - Creating config with monitoring level: HIGH
+2026-03-30 23:57:24,705 - INFO - Config created successfully
+2026-03-30 23:57:24,705 - INFO - Printing config settings...
+2026-03-30 23:57:24,705 - INFO - Config settings printed
+2026-03-30 23:57:24,705 - INFO - Configuration setup complete
+2026-03-30 23:57:24,705 - INFO - Setting up database...
+2026-03-30 23:57:24,705 - INFO - Creating DatabaseManager...
+2026-03-30 23:57:24,707 - INFO - Initializing database...
+2026-03-30 23:57:26,974 - INFO - System information saved to: C:\Users\xavie\Desktop\Spyglass\system_info.json
+2026-03-30 23:57:26,977 - INFO - Verifying database connection...
+2026-03-30 23:57:26,979 - INFO - Database setup complete
+2026-03-30 23:57:26,979 - INFO - Database setup initialized successfully
+2026-03-30 23:57:27,164 - INFO - Logged 111/111 installed apps
+2026-03-30 23:57:27,164 - INFO - Installed apps logged to DB: 111
+2026-03-30 23:57:27,165 - INFO - Keystroke logging is ENABLED
+2026-03-30 23:57:27,165 - INFO - Setup completed successfully. Showing a menu...
+2026-03-30 23:57:43,846 - ERROR - Error in show_menu: 'Spyglass' object has no attribute 'start_integrated_test'
+Traceback (most recent call last):
+  File "C:\Users\xavie\Desktop\Spyglass\spyglass.py", line 547, in main
+    app.show_menu()
+  File "C:\Users\xavie\Desktop\Spyglass\spyglass.py", line 377, in show_menu
+    self.start_integrated_test(180)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Spyglass' object has no attribute 'start_integrated_test'
+2026-03-30 23:57:43,846 - ERROR - Fatal error: 'Spyglass' object has no attribute 'start_integrated_test'
+Traceback (most recent call last):
+  File "C:\Users\xavie\Desktop\Spyglass\spyglass.py", line 547, in main
+    app.show_menu()
+  File "C:\Users\xavie\Desktop\Spyglass\spyglass.py", line 377, in show_menu
+    self.start_integrated_test(180)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Spyglass' object has no attribute 'start_integrated_test'
