@@ -8,6 +8,7 @@
         "Blocklist",
         "BLOCKLISTED",
         "COLOURS",
+        "cooldown",
         "DGRAM",
         "executescript",
         "fstype",

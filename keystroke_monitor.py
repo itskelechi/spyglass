@@ -1,5 +1,8 @@
+from collections import deque
 import datetime
 import logging
+import threading
+import time
 from pynput import keyboard
 from typing import Dict, Optional
 
@@ -95,9 +98,9 @@ class KeystrokeMonitor:
             key_str = str(key)
 
         with self.lock:
-            self.keystrokes[keyStr] = self.keystrokes.get(keyStr, 0) + 1
-            self.last_key = keyStr
-        logging.getLogger('keystrokes').info(f"Key: {keyStr}")
+            self.keystrokes[key_str] = self.keystrokes.get(key_str, 0) + 1
+            self.last_key = key_str
+        logging.getLogger('keystrokes').info(f"Key: {key_str}")
         
     def on_click(self, x,y):
         with self.lock:
