@@ -4,7 +4,7 @@ import time
 import ctypes
 from typing import Dict, Optional, Any
 
-
+#CURRENTLY NOT IN USE - ALERT MANAGER IS CALLED DIRECTLY FROM THE MONITORING MODULES, BUT THIS CLASS CAN BE EXPANDED IN THE FUTURE TO HANDLE MORE COMPLEX ALERTING LOGIC, MULTIPLE CHANNELS, ETC.
 class AlertManager:
     def __init__(
         self,

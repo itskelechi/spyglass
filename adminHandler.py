@@ -39,5 +39,3 @@ class AdminHandler:
             print("Admin privileges are required for this application.")
             return False
         return True
-            
-        

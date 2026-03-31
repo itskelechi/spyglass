@@ -15,14 +15,10 @@ from keylogger import Keylogger
 from alertEngine import AlertEngine
 from configSettings import create_config, ConfigSettings
 from userInfo import UserInfo
-from alert_manager import AlertManager
-from threshold_engine import ThresholdEngine
-
 
 class Spyglass:
     def __init__(self):
         self.app_monitor: Optional[AppMonitor] = None
-        self.keystroke_monitor: Optional[KeystrokeMonitor] = None
         self.consent = None
         self.config = None
         self.database = None
@@ -32,59 +28,49 @@ class Spyglass:
         self.monitoring_level = None
         self.monitoring_active = False
         self.is_running = False
-        self.alert_manager: Optional[AlertManager] = None
-        self.threshold_engine: Optional[ThresholdEngine] = None
-        self.thresholds: Dict[str, Dict[str, Any]] = {}
-
+    
     def run(self) -> bool:
         #Run the complete Spyglass a setup
         print("\n" + "="*70)
         print("WELCOME TO SPYGLASS".center(70))
-        print("=" * 70 + "\n")
-
+        print("="*70 + "\n")
+        
+        # STARTING SPYGLASS
         logging.info("Initializing...")
         logging.info("Starting APP setup - Checking admin privileges...")
         if not self.verify_admin():
             logging.error("Administrator privileges verification failed.")
-            return False
+            return False   
         logging.info("Administrator privileges verified")
-
+        
+        #Consent Screen
         logging.info("Getting User consent...")
         if not self.get_consent():
             logging.error("User did not provide consent. Exiting.")
             return False
         logging.info("User consent obtained")
-
+        
+        #Setup Config
         logging.info("Setting up configuration...")
         if not self.setup_config():
             logging.error("Configuration setup failed. Exiting.")
             return False
         logging.info("Configuration setup complete")
-
+        
+        # DB Initialization
         logging.info("Setting up database...")
         if not self.setup_db():
             logging.error("Database setup failed. Exiting.")
             return False
         logging.info("Database setup initialized successfully")
+        
 
-        self.monitoring_level = self.consent.get_monitoring_level()
-        self.threshold_engine = ThresholdEngine(self.monitoring_level)
-        self.thresholds = self.threshold_engine.get_thresholds()
-
-        self.alert_manager = AlertManager(
-            database=self.database,
-            monitoring_level=self.monitoring_level,
-            cooldown_seconds=self.thresholds["alerting"]["cooldown_seconds"],
-            startup_grace_seconds=self.thresholds["alerting"]["startup_grace_seconds"],
-        )
-
+        # system setup
         self.keylogger = Keylogger(self)
-        self.app_monitor = AppMonitor(
-            poll_interval=self.thresholds["application"]["poll_interval_seconds"],
-            monitoring_level=self.monitoring_level,
-            alert_manager=self.alert_manager,
-        )
+        self.app_monitor = AppMonitor()
+        self.monitoring_level = self.consent.get_monitoring_level()
 
+        # Log installed apps to DB
         app_count = self.app_monitor.scan_and_log_installed_apps()
         logging.info(f"Installed apps logged to DB: {app_count}")
         self.is_running = True
@@ -95,22 +81,27 @@ class Spyglass:
         
         # Check if keylogging is enabled
         if self.config.is_keylogger_enabled():
-            print("\nKeystroke logging is ENABLED")
+            print("\nKeystroke logging is ENABLED (HIGH monitoring level)")
             logging.info("Keystroke logging is ENABLED")
         else:
-            print("\nKeystroke logging is DISABLED")
+            print("\nKeystroke logging is DISABLED (LOW monitoring level)")
             logging.info("Keystroke logging is DISABLED")
-
-        print("\n" + "=" * 70)
+        
+        print("\n" + "="*70)
         print("SPYGLASS INITIALIZATION COMPLETE".center(70))
-        print("=" * 70 + "\n")
+        print("="*70 + "\n")
+        
         return True
-
+    
     def verify_admin(self) -> bool:
+        # Check and request admin privileges
         try:
             logging.info("Checking admin privileges...")
+            # Request admin if not already running as admin
             AdminHandler.check_and_request_admin()
-            print("Current privilege level: Admin")
+            
+            # If we get here, we're running as admin
+            print(f"Current privilege level: Admin")
             print("Administrator privileges confirmed.\n")
             logging.info("Administrator privileges confirmed")
             return True
@@ -118,8 +109,9 @@ class Spyglass:
             print(f"Error checking admin privileges: {e}\n")
             logging.error(f"Error checking admin privileges: {e}", exc_info=True)
             return False
-
+    
     def get_consent(self) -> bool:
+        # Display consent screen and get user consent# 
         try:
             print("User Consent & Monitoring Level Selection...\n")
             logging.info("Creating ConsentScreen...")
@@ -129,7 +121,7 @@ class Spyglass:
                 print("\nConsent was not given. Test cannot continue.\n")
                 logging.warning("User declined consent")
                 return False
-
+            
             self.monitoring_level = self.consent.get_monitoring_level()
             print(f"\nConsent received. Monitoring level: {self.monitoring_level}\n")
             logging.info(f"Consent received with monitoring level: {self.monitoring_level}")
@@ -138,31 +130,38 @@ class Spyglass:
             print(f"\nError during consent: {e}\n")
             logging.error(f"Error during consent: {e}", exc_info=True)
             return False
-
+    
     def setup_config(self) -> bool:
+        # Create and setup configuration from consent# 
         try:
             print("Configuring Monitoring Settings...\n")
             logging.info(f"Creating config with monitoring level: {self.monitoring_level}")
             self.config = create_config(self.monitoring_level)
+            logging.info("Config created successfully")
+            logging.info("Printing config settings...")
             self.config.print_settings()
+            logging.info("Config settings printed")
             return True
         except Exception as e:
             print(f"\nError setting up config: {e}\n")
             logging.error(f"Error setting up config: {e}", exc_info=True)
             return False
-
+    
     def setup_db(self) -> bool:
+        # Initialize the database# 
         try:
             print("Initializing Encrypted Database...\n")
+            logging.info("Creating DatabaseManager...")
             import hashlib
-
             encryption_key = hashlib.sha256(b"spyglass_secure_key_v1").hexdigest()
+            
             self.database = DatabaseManager()
+            logging.info("Initializing database...")
             self.database.initializeDB(create_tables=True, encryption_key=encryption_key)
-
+            
             user_info = UserInfo()
             device_info = user_info.to_dict()
-            system_info_path = os.path.join(os.path.dirname(__file__), "system_info.json")
+            system_info_path = os.path.join(os.path.dirname(__file__), 'system_info.json')
             user_info.save_to_file(system_info_path)
             logging.info(f"System information saved to: {system_info_path}")
 
@@ -173,8 +172,8 @@ class Spyglass:
             if not self.database.verifyConnection():
                 logging.error("Database connection verification failed")
                 return False
-
-            print("Database initialized successfully.\n")
+            
+            print("Database initialized with SQLCipher encryption and verified.\n")
             logging.info("Database setup complete")
             return True
         except Exception as e:
@@ -330,61 +329,32 @@ class Spyglass:
         print("\n" + "="*70 + "\n")
     
     def show_running_apps(self) -> None:
-        running_apps = self.app_monitor.get_running_apps() if self.app_monitor else []
+        """Display all currently running applications"""
+        print("\n" + "="*70)
+        print("SPYGLASS - RUNNING APPLICATIONS".center(70))
+        print("="*70 + "\n")
+        
+        print("Scanning for running applications...\n")
+        running_apps = self.app_monitor.get_running_apps()
+        
         if not running_apps:
-            print("\nNo running applications found.\n")
+            print("No running applications found.\n")
             return
-
-        print("\n" + "=" * 90)
-        print("RUNNING APPLICATIONS".center(90))
-        print("=" * 90)
-        print(f"{'Application Name':<30} {'PID':<8} {'Memory (MB)':<12} {'CPU %':<8} {'Window Title':<28}")
+        
+        print(f"Found {len(running_apps)} running applications:\n")
+        print(f"{'Application Name':<30} {'PID':<8} {'Memory (MB)':<12} {'CPU %':<8} {'Window Title':<30}")
         print("-" * 90)
-
-        for app in sorted(running_apps, key=lambda x: x["memory_mb"], reverse=True):
-            name = app["name"][:28] if len(app["name"]) > 28 else app["name"]
-            pid = str(app["pid"])
+        
+        for app in sorted(running_apps, key=lambda x: x['memory_mb'], reverse=True):
+            name = app['name'][:28] if len(app['name']) > 28 else app['name']
+            pid = str(app['pid'])
             memory = f"{app['memory_mb']:.1f}"
             cpu = f"{app['cpu_percent']:.1f}"
-            title = app["window_title"][:26] if len(app["window_title"]) > 26 else app["window_title"]
-            print(f"{name:<30} {pid:<8} {memory:<12} {cpu:<8} {title:<28}")
-
-        print("\n" + "=" * 90 + "\n")
-
-    def show_menu(self) -> None:
-        while True:
-            print("=" * 70)
-            print("SPYGLASS TEST MENU".center(70))
-            print("=" * 70)
-            print(f"Monitoring Level: {self.monitoring_level}")
-            print(f"Keystroke Logging: {'ENABLED' if self.config and self.config.is_keylogger_enabled() else 'DISABLED'}")
-            print("\n1. Start App Monitoring Test (180 seconds)")
-            if self.config and self.config.is_keylogger_enabled():
-                print("2. Start Integrated Test - HIGH SECURITY (180 seconds)")
-            else:
-                print("2. Start Integrated Test - HIGH SECURITY (Unavailable in LOW)")
-            print("3. Show Current Settings")
-            print("4. Show Running Apps Snapshot")
-            print("5. Exit")
-            choice = input("\nEnter your choice (1-5): ").strip()
-
-            if choice == "1":
-                self.start_app_monitoring(180)
-            elif choice == "2":
-                if self.config and self.config.is_keylogger_enabled():
-                    self.start_integrated_test(180)
-                else:
-                    print("\nIntegrated test is only available in HIGH monitoring mode.\n")
-            elif choice == "3":
-                self.show_current_settings()
-            elif choice == "4":
-                self.show_running_apps()
-            elif choice == "5":
-                print("\nExiting Spyglass.\n")
-                break
-            else:
-                print("\nInvalid choice. Please enter 1-5.\n")
-
+            title = app['window_title'][:28] if len(app['window_title']) > 28 else app['window_title']
+            print(f"{name:<30} {pid:<8} {memory:<12} {cpu:<8} {title:<30}")
+        
+        print("\n" + "="*70 + "\n")
+    
     def cleanup(self) -> None:
         """Clean up resources"""
         if self.monitoring_active:
@@ -410,43 +380,51 @@ def main():
     # Create separate loggers for application activity and keystroke data
     app_logger = logging.getLogger('app')
     app_logger.setLevel(logging.DEBUG)
-
-    keystroke_logger = logging.getLogger("keystrokes")
+    
+    keystroke_logger = logging.getLogger('keystrokes')
     keystroke_logger.setLevel(logging.INFO)
-
-    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-
-    app_file_handler = logging.FileHandler(log_file, encoding="utf-8")
+    
+    # Formatter
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    
+    # App logger handlers (application activity)
+    app_file_handler = logging.FileHandler(log_file, encoding='utf-8')
     app_file_handler.setFormatter(formatter)
     app_logger.addHandler(app_file_handler)
-
+    
     app_console_handler = logging.StreamHandler()
     app_console_handler.setFormatter(formatter)
     app_logger.addHandler(app_console_handler)
-
-    keystroke_file_handler = logging.FileHandler(keystroke_log_file, encoding="utf-8")
+    
+    # Keystroke logger handlers (keystroke data only)
+    keystroke_file_handler = logging.FileHandler(keystroke_log_file, encoding='utf-8')
     keystroke_file_handler.setFormatter(formatter)
     keystroke_logger.addHandler(keystroke_file_handler)
-
+    
+    # Set root logger to use app logger handlers
     logging.root.handlers = []
     logging.root.addHandler(app_file_handler)
     logging.root.addHandler(app_console_handler)
     logging.root.setLevel(logging.DEBUG)
-
+    
     logging.info("=" * 70)
     logging.info("SPYGLASS TEST STARTED")
     logging.info("=" * 70)
     logging.info(f"Application log: {log_file}")
     logging.info(f"Keystroke log: {keystroke_log_file}")
-
-    app = None
+    
     try:
         logging.info("Initializing Spyglass test...")
         app = Spyglass()
         logging.info("Running Spyglass setup...")
         if app.run():
             logging.info("Setup completed successfully. Showing a menu...")
-            app.show_menu()
+            try:
+                app.show_menu()
+            except Exception as menu_error:
+                logging.error(f"Error in show_menu: {menu_error}", exc_info=True)
+                print(f"\nError displaying menu: {menu_error}")
+                raise
         else:
             logging.warning("Setup did not complete successfully.")
         logging.info("Cleaning up resources...")
@@ -464,10 +442,6 @@ def main():
         import traceback
         traceback.print_exc()
         sys.exit(1)
-    finally:
-        if app is not None:
-            app.cleanup()
-        logging.info("Spyglass shutdown completed.")
 
 
 if __name__ == "__main__":
