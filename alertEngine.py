@@ -54,7 +54,7 @@ SEVERITY_COLOURS = {
 
 
 class AlertEngine:
-    def __init__(self, user_id: str):
+    def __init__(self, user_id: str, user_thresholds: dict = None):
         self.user_id = user_id
         self.is_running = False
         self.baseline_pids = set()
@@ -62,6 +62,73 @@ class AlertEngine:
         self.scan_thread = None
         self.lock = threading.Lock()
         self.polling_interval = 15  # seconds
+
+        # Keystroke subscription
+        self.keystroke_monitor = None
+        self.last_keystroke_snapshot = {}
+        self.last_snapshot_time = None
+
+        # Dynamic thresholds from user input
+        self._apply_thresholds(user_thresholds or {})
+
+    # Default severity-level thresholds
+    DEFAULT_THRESHOLDS = {
+        'cpu_limit': {'low': 30, 'medium': 55, 'high': 70, 'critical': 90},
+        'memory_limit': {'low': 40, 'medium': 65, 'high': 75, 'critical': 90},
+        'process_activity': {'low': 20, 'medium': 50, 'high': 100, 'critical': 200},
+        'same_script_limit': {'low': 10,  'medium': 20, 'high': 50,  'critical': 100},
+        'keystroke_frequency': {'low': 40, 'medium': 60, 'high': 100, 'critical': 120},
+        'modifier_key_threshold': {'low': 10,  'medium': 25,  'high': 50,  'critical': 75},
+    }
+
+    SEVERITY_ORDER = [('critical', CRITICAL_SECURITY), ('high', HIGH_SECURITY),
+                      ('medium', MED_SECURITY), ('low', LOW_SECURITY)]
+
+    def _apply_thresholds(self, t: dict) -> None:
+        """Extract threshold dicts (each with low/medium/high/critical keys)."""
+        self.thresholds = {}
+        for name, defaults in self.DEFAULT_THRESHOLDS.items():
+            user_val = t.get(name, {})
+            if isinstance(user_val, dict):
+                self.thresholds[name] = {
+                    sev: int(user_val.get(sev, defaults[sev]))
+                    for sev in ('low', 'medium', 'high', 'critical')
+                }
+            else:
+                # Backward compat: single value → treat as high threshold
+                self.thresholds[name] = dict(defaults)
+                if user_val is not None:
+                    self.thresholds[name]['high'] = int(user_val)
+
+    def _check_severity(self, value: float, threshold_name: str, alert_type: str,
+                        key_prefix: str, message_template: str,
+                        app_name=None, exe_path=None):
+        """Check a value against all 4 severity levels (highest first) and raise one alert."""
+        levels = self.thresholds.get(threshold_name, {})
+        for sev_key, sev_const in self.SEVERITY_ORDER:
+            limit = levels.get(sev_key)
+            if limit is not None and value >= limit:
+                self.raise_alert(
+                    sev_const,
+                    alert_type=alert_type,
+                    key=f"{key_prefix}_{sev_key}",
+                    message=message_template.format(value=value, severity=sev_key.upper(), limit=limit),
+                    app_name=app_name, exe_path=exe_path)
+                break  # only fire the highest matched severity
+
+    def update_thresholds(self, new_thresholds: dict) -> None:
+        """Hot-reload thresholds without restart."""
+        self._apply_thresholds(new_thresholds)
+        with self.lock:
+            self.alert_history.clear()  # reset dedup so new limits can fire
+        logging.info(f"AlertEngine thresholds updated: {new_thresholds}")
+
+    def subscribe_to_keylogger(self, keystroke_monitor) -> None:
+        """Subscribe to live KeystrokeMonitor for keystroke threshold checks."""
+        self.keystroke_monitor = keystroke_monitor
+        self.last_keystroke_snapshot = {}
+        self.last_snapshot_time = datetime.now()
+        logging.info("AlertEngine subscribed to keystroke monitor")
 
     def start(self):
         if self.is_running:
@@ -101,27 +168,26 @@ class AlertEngine:
                 message=f"Background script detected: {script['name']} (PID {script['pid']})",
                 app_name=script['name'], exe_path=script.get('exe', ''))
 
-        #MEDIUM - 50+ SCRIPTS SIMULTANEOUSLY
-        if len(scripts) >= 50:
-            self.raise_alert(
-                MED_SECURITY,
-                alert_type="Excessive Scripts",
-                key="script_volume",
-                message=f"High number of background scripts detected: {len(scripts)}",
-                app_name=None, exe_path=None)
+        # Process activity threshold (simultaneous scripts) — 4 severity levels
+        self._check_severity(
+            value=len(scripts),
+            threshold_name='process_activity',
+            alert_type="Excessive Scripts",
+            key_prefix="script_volume",
+            message_template="Scripts ({value}) exceeded {severity} threshold ({limit})")
 
-        #HIGH - 10+ SCRIPTS FROM SAME APP
+        # Same-app script flood — 4 severity levels
         app_counts = {}
         for script in scripts:
             app_counts.setdefault(script['name'], []).append(script)
         for app, instances in app_counts.items():
-            if len(instances) >= 10:
-                self.raise_alert(
-                    HIGH_SECURITY,
-                    alert_type="Suspicious App Behavior",
-                    key=f"AppFlood_{app}",
-                    message=f"{len(instances)} background scripts from {app} detected",
-                    app_name=app, exe_path=instances[0].get('exe', ''))
+            self._check_severity(
+                value=len(instances),
+                threshold_name='same_script_limit',
+                alert_type="Suspicious App Behavior",
+                key_prefix=f"AppFlood_{app}",
+                message_template=f"{{value}} scripts from {app} ({{severity}} limit: {{limit}})",
+                app_name=app, exe_path=instances[0].get('exe', ''))
 
         #CRITICAL - BLOCKLISTED APPS
         for script in scripts:
@@ -144,9 +210,81 @@ class AlertEngine:
                     CRITICAL_SECURITY,
                     alert_type="Password Field Detected",
                     key=f"PasswordField_{title[:40]}",
-                    message=f'Potential password field detected in window: "{title}"',
+                    message=f'Potential password field in window: "{title}"',
                     app_name=None, exe_path=None)
                 break
+
+        # CPU threshold — 4 severity levels
+        cpu_percent = psutil.cpu_percent(interval=0)
+        self._check_severity(
+            value=cpu_percent,
+            threshold_name='cpu_limit',
+            alert_type="CPU Threshold Exceeded",
+            key_prefix="cpu_limit",
+            message_template="CPU usage {value:.1f}% exceeded {severity} threshold ({limit}%)")
+
+        # Memory threshold — 4 severity levels
+        mem = psutil.virtual_memory()
+        self._check_severity(
+            value=mem.percent,
+            threshold_name='memory_limit',
+            alert_type="Memory Threshold Exceeded",
+            key_prefix="memory_limit",
+            message_template="Memory usage {value:.1f}% exceeded {severity} threshold ({limit}%)")
+
+        # Keystroke thresholds (subscribed to keylogger)
+        self._check_keystroke_thresholds()
+
+    def _check_keystroke_thresholds(self):
+        """Check keystroke frequency and modifier combo thresholds via keylogger subscription."""
+        if not self.keystroke_monitor:
+            return
+
+        now = datetime.now()
+        with self.keystroke_monitor.lock:
+            current_snapshot = self.keystroke_monitor.keystrokes.copy()
+
+        # Calculate elapsed time since last snapshot
+        if self.last_snapshot_time:
+            elapsed_minutes = max((now - self.last_snapshot_time).total_seconds() / 60.0, 0.01)
+        else:
+            elapsed_minutes = self.polling_interval / 60.0
+
+        # Delta keystrokes since last check
+        modifier_keys = {'Key.shift', 'Key.shift_r', 'Key.ctrl_l', 'Key.ctrl_r',
+                         'Key.alt_l', 'Key.alt_r', 'Key.cmd', 'Key.cmd_r'}
+        delta_total = 0
+        delta_modifiers = 0
+
+        for key, count in current_snapshot.items():
+            prev = self.last_keystroke_snapshot.get(key, 0)
+            delta = count - prev
+            if delta > 0:
+                delta_total += delta
+                if key in modifier_keys:
+                    delta_modifiers += delta
+
+        keys_per_minute = delta_total / elapsed_minutes
+
+        # Keystroke frequency — 4 severity levels
+        self._check_severity(
+            value=keys_per_minute,
+            threshold_name='keystroke_frequency',
+            alert_type="Keystroke Frequency Exceeded",
+            key_prefix="keystroke_freq",
+            message_template="Typing speed {value:.0f} KPM exceeded {severity} threshold ({limit})")
+
+        # Modifier combo — 4 severity levels
+        self._check_severity(
+            value=delta_modifiers,
+            threshold_name='modifier_key_threshold',
+            alert_type="Modifier Key Threshold Exceeded",
+            key_prefix="modifier_combo",
+            message_template="Modifier combos ({value}) exceeded {severity} threshold ({limit})")
+
+        # Update snapshot for next interval
+        self.last_keystroke_snapshot = current_snapshot
+        self.last_snapshot_time = now
 
     # ── alert dispatcher ──────────────────────────────────────────
     def raise_alert(self, severity: str, alert_type: str, key: str, message: str,

@@ -7,5 +7,43 @@
   "max_storage_mb": 1000,
   "debug_logging": false,
   "auto_backup_enabled": false,
-  "database_encryption": true
+  "database_encryption": true,
+  "thresholds": {
+    "cpu_threshold": {
+      "low": 60,
+      "medium": 75,
+      "high": 90,
+      "critical": 95
+    },
+    "memory_threshold": {
+      "low": 60,
+      "medium": 75,
+      "high": 85,
+      "critical": 95
+    },
+    "process_activity_threshold": {
+      "low": 20,
+      "medium": 50,
+      "high": 100,
+      "critical": 200
+    },
+    "same_app_script_limit": {
+      "low": 5,
+      "medium": 10,
+      "high": 20,
+      "critical": 50
+    },
+    "keystroke_frequency_threshold": {
+      "low": 200,
+      "medium": 360,
+      "high": 500,
+      "critical": 700
+    },
+    "modifier_key_combination_threshold": {
+      "low": 10,
+      "medium": 25,
+      "high": 50,
+      "critical": 100
+    }
+  }
 }

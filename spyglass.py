@@ -77,7 +77,8 @@ class Spyglass:
 
         # Create alert engine
         user_id = self.user_info.info.get('hardware', {}).get('machine_id', '') if self.user_info else ''
-        self.alert_engine = AlertEngine(user_id)
+        user_thresholds = self.consent.get_thresholds()
+        self.alert_engine = AlertEngine(user_id, user_thresholds=user_thresholds)
         
         # Check if keylogging is enabled
         if self.config.is_keylogger_enabled():
@@ -167,6 +168,27 @@ class Spyglass:
 
             self.database.insertIntoUserTable(deviceInfo=device_info)
             self.user_info = user_info
+
+            # Persist user thresholds to DB
+            user_thresholds = self.consent.get_thresholds()
+            machine_id = self.user_info.info.get('hardware', {}).get('machine_id', '')
+            
+            from database import insertIntoThresholdTable
+            
+            for setting_name, severity_dict in user_thresholds.items():
+                for severity, value in severity_dict.items():
+                    insertIntoThresholdTable(
+                        userID=machine_id,
+                        thresholdType='security',
+                        settingName=f"{setting_name}_{severity}",
+                        settingValue=str(value)
+                    )
+            logging.info(f"User thresholds saved to DB: {user_thresholds}")
+
+            # Save thresholds to spyglass_settings.json
+            self.config.set_setting('thresholds', user_thresholds)
+            self.config.save_config()
+            logging.info("User thresholds saved to spyglass_settings.json")
             
             logging.info("Verifying database connection...")
             if not self.database.verifyConnection():
@@ -188,6 +210,9 @@ class Spyglass:
         self.app_monitor.start_monitoring()
         if self.config.is_keylogger_enabled():
             self.keylogger.start_keylogger()
+            # Subscribe alert engine to live keystroke data
+            if self.alert_engine and self.keylogger.keylogger:
+                self.alert_engine.subscribe_to_keylogger(self.keylogger.keylogger)
         if self.alert_engine:
             self.alert_engine.start()
         self.monitoring_active = True
@@ -259,9 +284,10 @@ class Spyglass:
             print("3. View Installed Apps")
             print("4. View Running Apps")
             print("5. Show Reports")
-            print("6. Exit\n")
+            print("6. Reconfigure Thresholds")
+            print("7. Exit\n")
 
-            choice = input("Select option (1-6): ").strip().lower()
+            choice = input("Select option (1-7): ").strip().lower()
 
             if choice in ('1', 'stop') and self.monitoring_active:
                 self.stop_all_monitoring()
@@ -275,14 +301,52 @@ class Spyglass:
                 self.show_running_apps()
             elif choice == '5':
                 self.show_reports()
-            elif choice in ('6','stop'):
+            elif choice == '6':
+                self.reconfigure_thresholds()
+            elif choice in ('7', 'exit'):
                 if self.monitoring_active:
                     self.stop_all_monitoring()
                 print("\nExiting Spyglass...\n")
                 break
             else:
-                print("\nInvalid choice. Please select between 1-6.\n")
+                print("\nInvalid choice. Please select between 1-7.\n")
     
+    def reconfigure_thresholds(self) -> None:
+        """Let user re-set thresholds and append new values to DB + update JSON + AlertEngine."""
+        was_active = self.monitoring_active
+        if was_active:
+            self.stop_all_monitoring()
+
+        # Re-run the threshold input flow
+        self.consent.set_thresholds()
+        user_thresholds = self.consent.get_thresholds()
+        user_id = self.user_info.info.get('hardware', {}).get('machine_id', '')
+
+        # Append new rows to threshold table (history preserved)
+        from database import insertIntoThresholdTable
+        for name, severity_dict in user_thresholds.items():
+            for severity, value in severity_dict.items():
+                insertIntoThresholdTable(
+                    userID=user_id,
+                    thresholdType='security',
+                    settingName=f"{name}_{severity}",
+                    settingValue=str(value)
+                )
+
+        # Update JSON settings
+        self.config.set_setting('thresholds', user_thresholds)
+        self.config.save_config()
+
+        # Hot-reload into AlertEngine
+        if self.alert_engine:
+            self.alert_engine.update_thresholds(user_thresholds)
+
+        logging.info(f"Thresholds reconfigured: {user_thresholds}")
+        print("Thresholds updated successfully.\n")
+
+        if was_active:
+            self.start_all_monitoring()
+
     def show_installed_apps(self) -> None:
         """Display applications logged in the database"""
         print("\n" + "="*70)

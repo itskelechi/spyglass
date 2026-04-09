@@ -123,7 +123,7 @@ class DatabaseManager:
                     thresholdID     INTEGER PRIMARY KEY AUTOINCREMENT,
                     userID          TEXT    NOT NULL,
                     appID           INTEGER,                       -- NULL for system-wide thresholds
-                    thresholdType   TEXT    NOT NULL,              -- 'privacy' or 'security'
+                    thresholdType   TEXT    NOT NULL,              -- 'basic' or 'advanced' or 'expert'
                     settingName     TEXT    NOT NULL,
                     settingValue    TEXT    NOT NULL,
                     enabled         INTEGER NOT NULL DEFAULT 1,
@@ -472,12 +472,35 @@ def insertDefaultThresholds(userID: str) -> None:
     defaults = [
         ('security', 'background_script_limit', '1'),
         ('security', 'simultaneous_script_limit', '10'),
-        ('security', 'same_app_script_limit', '3'),
+        ('security', 'same_script_limit', '3'),
         ('security', 'password_detection', '1'),
         ('security', 'blocklist_enabled', '1'),
     ]
     for t_type, name, value in defaults:
         insertIntoThresholdTable(userID, t_type, name, value)
+
+def getThresholdsForUser(userID: str) -> dict:
+    """Load the latest enabled threshold per settingName for a user."""
+    db = getDB()
+    if db.connection is None:
+        return {}
+    try:
+        cursor = db.connection.cursor()
+        cursor.execute("""
+            SELECT settingName, settingValue
+            FROM threshold
+            WHERE userID = ? AND enabled = 1
+              AND thresholdID IN (
+                  SELECT MAX(thresholdID) FROM threshold
+                  WHERE userID = ? AND enabled = 1
+                  GROUP BY settingName
+              )
+        """, (userID, userID))
+        rows = cursor.fetchall()
+        cursor.close()
+        return {name: value for name, value in rows}
+    except Exception:
+        return {}
 
 def insertIntoReportTable(userID:str, report_type:str, file_path:str) -> bool:
     db = getDB()
