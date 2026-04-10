@@ -6,14 +6,14 @@ import datetime
 import os
 from typing import Dict, Any, Optional
 
-from appMonitor import AppMonitor
-from keystroke_monitor import KeystrokeMonitor
-from database import DatabaseManager, insertIntoKeystrokeSummaryTable
-from consent import ConsentScreen
-from adminHandler import AdminHandler
-from keylogger import Keylogger
+from monitoring.appMonitor import AppMonitor
+from monitoring.keystroke_monitor import KeystrokeMonitor
+from db.database import DatabaseManager, insertIntoKeystrokeSummaryTable
+from config.consent import ConsentScreen
+from config.adminHandler import AdminHandler
+from monitoring.keylogger import Keylogger
 from alertEngine import AlertEngine
-from configSettings import create_config, ConfigSettings
+from config.configSettings import create_config, ConfigSettings
 from userInfo import UserInfo
 
 class Spyglass:
@@ -159,6 +159,8 @@ class Spyglass:
             self.database = DatabaseManager()
             logging.info("Initializing database...")
             self.database.initializeDB(create_tables=True, encryption_key=encryption_key)
+            from db.database import setDB
+            setDB(self.database)
             
             user_info = UserInfo()
             device_info = user_info.to_dict()
@@ -173,7 +175,7 @@ class Spyglass:
             user_thresholds = self.consent.get_thresholds()
             machine_id = self.user_info.info.get('hardware', {}).get('machine_id', '')
             
-            from database import insertIntoThresholdTable
+            from db.database import insertIntoThresholdTable
             
             for setting_name, severity_dict in user_thresholds.items():
                 for severity, value in severity_dict.items():
@@ -207,12 +209,14 @@ class Spyglass:
         #Start app monitoring, alert engine, and keystroke logging (if HIGH)
         print("\nStarting monitoring...")
         logging.info("Starting System monitoring...")
-        self.app_monitor.start_monitoring()
-        if self.config.is_keylogger_enabled():
-            self.keylogger.start_keylogger()
-            # Subscribe alert engine to live keystroke data
-            if self.alert_engine and self.keylogger.keylogger:
-                self.alert_engine.subscribe_to_keylogger(self.keylogger.keylogger)
+        if self.app_monitor:
+            self.app_monitor.start_monitoring()
+        if self.config and self.config.is_keylogger_enabled():
+            if self.keylogger:
+                self.keylogger.start_keylogger()
+                # Subscribe alert engine to live keystroke data
+                if self.alert_engine and self.keylogger.keylogger:
+                    self.alert_engine.subscribe_to_keylogger(self.keylogger.keylogger)
         if self.alert_engine:
             self.alert_engine.start()
         self.monitoring_active = True
@@ -223,8 +227,9 @@ class Spyglass:
         #Stop all active monitoring
         print("\nStopping monitoring...")
         logging.info("Stopping System monitoring...")
-        self.app_monitor.stop_monitoring()
-        if self.config.is_keylogger_enabled():
+        if self.app_monitor:
+            self.app_monitor.stop_monitoring()
+        if self.config and self.config.is_keylogger_enabled() and self.keylogger:
             self.keylogger.stop_keylogger()
         if self.alert_engine:
             self.alert_engine.stop()
@@ -323,7 +328,7 @@ class Spyglass:
         user_id = self.user_info.info.get('hardware', {}).get('machine_id', '')
 
         # Append new rows to threshold table (history preserved)
-        from database import insertIntoThresholdTable
+        from db.database import insertIntoThresholdTable
         for name, severity_dict in user_thresholds.items():
             for severity, value in severity_dict.items():
                 insertIntoThresholdTable(

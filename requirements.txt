@@ -4,3 +4,4 @@ pynput==1.7.6
 cryptography==41.0.7
 sqlcipher3-binary==3.46.1
 pywin32==306
+PyQt6>=6.6.0

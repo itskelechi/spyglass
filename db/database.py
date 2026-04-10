@@ -31,10 +31,12 @@ class DatabaseManager:
             self.connection = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30)
             self.encryption_key = encryption_key
             
-            # Set encryption key for SQLCipher
+            # Set encryption key and cipher settings for SQLCipher
             if USING_SQLCIPHER:
                 cursor = self.connection.cursor()
                 cursor.execute(f"PRAGMA key = '{encryption_key}'")
+                cursor.execute("PRAGMA cipher_page_size = 4096")
+                cursor.execute("PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA512")
                 cursor.close()
             
             if create_tables:
@@ -59,8 +61,6 @@ class DatabaseManager:
             # Execute all table creation and index statements
             cursor.executescript("""
                     PRAGMA foreign_keys = ON;
-                    PRAGMA cipher_page_size = 4096;
-                    PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA512;
                     PRAGMA synchronous = FULL;
                     PRAGMA temp_store = MEMORY;
                     PRAGMA journal_mode = WAL;
@@ -368,6 +368,11 @@ class DatabaseManager:
         except Exception as e:
             print(f"Error retrieving device information: {e}")
             return None
+
+def setDB(db: DatabaseManager) -> None:
+    """Register an already-initialised DatabaseManager as the global instance."""
+    global spyglassDB
+    spyglassDB = db
 
 def getDB() -> DatabaseManager:
     global spyglassDB

@@ -6,7 +6,7 @@ import sys
 import psutil
 import winreg
 
-from database import insertIntoAppTable
+from db.database import insertIntoAppTable
 
 
 class AppMonitor:

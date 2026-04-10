@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo/spyglass_logo.png" alt="Spyglass Logo" width="150" />
+</p>
+
 # Spyglass - Device Monitoring & Keystroke Logger
 
 A Windows-based device monitoring application with consent-driven monitoring levels, keystroke logging, and encrypted local data storage.

@@ -5,7 +5,7 @@ import logging
 import tkinter as tk
 from datetime import datetime
 from typing import Optional
-from database import (
+from db.database import (
     insertIntoActivityLogTable,
     insertIntoAlertTable,
     updateAlertResponse,
@@ -334,12 +334,12 @@ class AlertEngine:
 
         # ── title ──
         tk.Label(root, text=f"SPYGLASS ALERT ({severity.upper()})",
-                 font=("Segoe UI", 9, "bold"),
+                 font=("Inter UI", 9, "bold"),
                  bg=bg, fg="#ffffff", anchor='w').pack(fill='x', padx=10, pady=(8, 0))
 
         # ── message ──
         tk.Label(root, text=message.upper(),
-                 font=("Segoe UI", 8, "bold"),
+                 font=("Inter UI", 8, "bold"),
                  bg=bg, fg="#ffffff",
                  wraplength=255, justify='left', anchor='nw').pack(fill='both', expand=True, padx=10, pady=(4, 0))
 
@@ -359,7 +359,7 @@ class AlertEngine:
                 self.alert_history.pop((severity, key), None)
             root.destroy()
 
-        btn_style = dict(font=("Segoe UI", 8, "bold"), fg="#ffffff",
+        btn_style = dict(font=("Inter UI", 8, "bold"), fg="#ffffff",
                          relief='flat', cursor='hand2', pady=4)
         tk.Button(btn_frame, text="DISMISS", command=dismiss,
                   bg="#dad8d8", activebackground="#3e5a6a",

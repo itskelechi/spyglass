@@ -4,8 +4,8 @@ import sys
 import time
 import os
 
-from keystroke_monitor import KeystrokeMonitor
-from database import DatabaseManager, insertIntoKeystrokeSummaryTable
+from monitoring.keystroke_monitor import KeystrokeMonitor
+from db.database import DatabaseManager, insertIntoKeystrokeSummaryTable
 
 class Keylogger:
     def __init__(self, app=None):
