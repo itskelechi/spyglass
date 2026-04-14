@@ -14,11 +14,11 @@ from PyQt6.QtWidgets import (
     QMessageBox, QSizePolicy, QScrollArea, QTableWidget, QTableWidgetItem,
     QHeaderView, QSpacerItem, QLineEdit, QApplication
 )
-from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPropertyAnimation, QEasingCurve
+from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF, QPropertyAnimation, QEasingCurve, pyqtSignal
 from PyQt6.QtGui import QFont, QPainter, QColor, QLinearGradient, QRadialGradient, QPen, QPixmap, QIcon, QPainterPath
 
 # Logo path (resolved relative to this file)
-LOGO = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logo", "spyglass_logo.png")
+LOGO = os.path.join(os.path.dirname(__file__), "logo", "spyglass_logo.png")
 
 from gui.styles import COLORS, SEVERITY_COLORS, BG_GRADIENT_CSS
 from gui.glass_widgets import (
@@ -26,7 +26,7 @@ from gui.glass_widgets import (
     StatusPill, GlassStatCard,
 )
 from gui.app_table import InstalledAppsPanel, RunningAppsPanel
-from gui.threshold_window import ThresholdWindow
+from gui.threshold_window import ThresholdWindow, ThresholdPage
 from gui.workers import AlertSignalBridge
 
 
@@ -64,7 +64,7 @@ class FloatingNotification(QWidget):
         layout.addWidget(self._icon_label)
 
         self._text_label = QLabel()
-        self._text_label.setFont(QFont("Inter UI", 11))
+        self._text_label.setFont(QFont("Gruppo", 11))
         self._text_label.setWordWrap(True)
         self._text_label.setStyleSheet(f"color: {COLORS['text_primary']};")
         layout.addWidget(self._text_label)
@@ -122,20 +122,23 @@ class SidebarNavButton(QPushButton):
         self.setCheckable(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setMinimumHeight(44)
-        self.setFont(QFont("Inter", 12, QFont.Weight.DemiBold))
+        self.setFont(QFont("Gruppo", 14, QFont.Weight.Bold))
         self._update_style(False)
 
     def _update_style(self, checked: bool):
         if checked:
             self.setStyleSheet(f"""
                 QPushButton {{
-                    background: rgba(15, 18, 50, 0.55);
+                    background: rgba(210, 225, 225, 0.08);
                     color: {COLORS['text_primary']};
                     text-align: left;
                     padding-left: 22px;
                     border: none;
                     border-bottom: 2px solid {COLORS['accent_steel']};
-                    font-size: 13px;
+                    border-top-left-radius: 0px;
+                    border-top-right-radius: 0px;
+                    border-bottom-left-radius: 0px;
+                    font-size: 16px;
                     font-weight: 700;
                 }}
             """)
@@ -145,14 +148,23 @@ class SidebarNavButton(QPushButton):
                     background: transparent;
                     color: {COLORS['text_secondary']};
                     text-align: left;
-                    padding-left: 22px;
+                    padding-left: 20px;
                     border: none;
-                    font-size: 13px;
-                    font-weight: 500;
+                    font-size: 14px;
+                    font-weight: 700;
                 }}
                 QPushButton:hover {{
-                    background: rgba(255,255,255,0.03);
+                    background: qlineargradient(
+                        y1:0, y2:1,
+                        stop:0 rgba(225,225,255,0.07),
+                        stop:0.5 rgba(225,225,255,0.02),
+                        stop:1 rgba(225,225,255,0)
+                    );
                     color: {COLORS['text_primary']};
+                    border-top-left-radius: 0px;
+                    border-top-right-radius: 0px;
+                    border-bottom-left-radius: 0px;
+                    border: 1px solid rgba(210, 225, 255, 0.12);
                 }}
             """)
 
@@ -166,17 +178,31 @@ class SidebarNavButton(QPushButton):
 # ─────────────────────────────────────────────────────────────────
 
 class MiniPowerIcon(QWidget):
-    clicked = pyqtSignal = None  # read-only indicator
+    clicked = pyqtSignal()
 
     def __init__(self, size: int = 60, parent=None):
         super().__init__(parent)
         self._size = size
         self._active = False
+        self._hovered = False
         self.setFixedSize(size, size)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def set_active(self, active: bool):
         self._active = active
         self.update()
+
+    def enterEvent(self, event):
+        self._hovered = True
+        self.update()
+
+    def leaveEvent(self, event):
+        self._hovered = False
+        self.update()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
 
     def paintEvent(self, event):
         p = QPainter(self)
@@ -186,6 +212,10 @@ class MiniPowerIcon(QWidget):
         r = s * 0.4
 
         col = QColor(COLORS["accent_green"]) if self._active else QColor(COLORS["accent_red"])
+
+        # Hover: accent ice
+        if self._hovered:
+            col = QColor(COLORS["accent_ice"])
 
         # Outer glass circle
         p.setPen(QPen(QColor(100, 120, 200, 50), 1))
@@ -208,8 +238,6 @@ class MiniPowerIcon(QWidget):
         p.end()
 
 
-from PyQt6.QtCore import pyqtSignal
-
 
 # ═════════════════════════════════════════════════════════════════
 #  DASHBOARD  MAIN  WINDOW
@@ -225,7 +253,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
         self.resize(1280, 760)
 
         self._alert_bridge = AlertSignalBridge()
-        self._alert_bridge.alert_raised.connect(self._on_alert_raised)
+        self._alert_bridge.alert_raised.connect(self.on_alert_raised)
         self._alert_count = 0
 
         # Window icon
@@ -233,7 +261,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
             self.setWindowIcon(QIcon(LOGO))
 
         self.build_ui()
-        self._start_polling()
+        self.start_polling()
 
     # ── gradient background ──────────────────────────────────────
     def paintEvent(self, event):
@@ -255,11 +283,12 @@ class DashboardWindow(QMainWindow, GradientBackground):
         # — Stacked pages (match CLI menu order) —
         self.stack = QStackedWidget()
         self.stack.setStyleSheet("background: transparent;")
-        self.stack.addWidget(self._build_home_page())           # 0 – Home / Start Monitoring
-        self.stack.addWidget(self._build_settings_page())       # 1 – Show Current Settings
-        self.stack.addWidget(self._build_installed_apps_page()) # 2 – View Installed Apps
-        self.stack.addWidget(self._build_analytics_page())      # 3 – View Running Apps
-        self.stack.addWidget(self._build_reports_page())        # 4 – Show Reports
+        self.stack.addWidget(self.build_home_page())           # 0 – Home / Start Monitoring
+        self.stack.addWidget(self.build_settings_page())       # 1 – Show Current Settings
+        self.stack.addWidget(self.build_installed_apps_page()) # 2 – View Installed Apps
+        self.stack.addWidget(self.build_analytics_page())      # 3 – View Running Apps
+        self.stack.addWidget(self.build_reports_page())        # 4 – Show Reports
+        self.stack.addWidget(self.build_thresholds_page())    # 5 – Edit Thresholds
         root.addWidget(self.stack, 1)
 
         self._nav_buttons[0].setChecked(True)
@@ -270,7 +299,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
     # ── Sidebar ──────────────────────────────────────────────────
     def build_sidebar(self) -> GlassSidebar:
         sidebar = GlassSidebar()
-        sidebar.setFixedWidth(224)
+        sidebar.setFixedWidth(250)
         layout = QVBoxLayout(sidebar)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -278,26 +307,28 @@ class DashboardWindow(QMainWindow, GradientBackground):
         # Logo pill with logo inside
         logo_container = QWidget()
         logo_container.setFixedHeight(90)
-        logo_container.setStyleSheet(f"background: transparent; border: 1px solid {COLORS['accent_steel']};")
+        logo_container.setStyleSheet(f"background: transparent;")
         logo_outer = QVBoxLayout(logo_container)
         logo_outer.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         logo_pill = GlassPanel(radius=10, bg_alpha=70)
-        logo_pill.setFixedSize(200, 60)
+        logo_pill.setFixedSize(210, 60)
+        logo_pill.setCursor(Qt.CursorShape.PointingHandCursor)
+        logo_pill.mousePressEvent = lambda e: self.switch_page(0)
         pill_layout = QHBoxLayout(logo_pill)
         pill_layout.setContentsMargins(12, 0, 12, 0)
         pill_layout.setSpacing(10)
         if os.path.isfile(LOGO):
             logo_img = QLabel()
             pixmap = QPixmap(LOGO).scaled(
-                60, 100, Qt.AspectRatioMode.KeepAspectRatio,
+                30, 70, Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             )
             logo_img.setPixmap(pixmap)
             logo_img.setStyleSheet("background: transparent;")
             pill_layout.addWidget(logo_img)
         logo_text = QLabel("SPYGLASS")
-        logo_text.setFont(QFont("JetBrains Mono", 15, QFont.Weight.Bold))
+        logo_text.setFont(QFont("Bungee Hairline", 16, QFont.Weight.Bold))
         logo_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         logo_text.setStyleSheet(f"color: {COLORS['accent_ice']}; letter-spacing: 3px;")
         pill_layout.addWidget(logo_text)
@@ -313,13 +344,13 @@ class DashboardWindow(QMainWindow, GradientBackground):
             "View Installed Apps",   # 2
             "View Running Apps",     # 3
             "Show Reports",          # 4
-            "Edit Thresholds",# 5    #5 TODO: is a popUP, render as a page if triggered from sidebar
+            "Edit Thresholds",       # 5
             "Exit",                  # 6
         ]
         self._nav_buttons: list[SidebarNavButton] = []
         for i, name in enumerate(menu_items):
             btn = SidebarNavButton(name)
-            btn.clicked.connect(lambda checked, idx=i: self._handle_menu(idx))
+            btn.clicked.connect(lambda checked, idx=i: self.handle_menu(idx))
             self._nav_buttons.append(btn)
             layout.addWidget(btn)
             layout.addSpacing(4)
@@ -327,35 +358,35 @@ class DashboardWindow(QMainWindow, GradientBackground):
         layout.addStretch()
         return sidebar
 
-    def _handle_menu(self, idx: int):
+    def handle_menu(self, idx: int):
         """Route sidebar clicks to pages or actions."""
         if idx == 0:
             # Start/Stop Monitoring – go to home page + toggle
-            self._switch_page(0)
-            self._toggle_monitoring()
+            self.switch_page(0)
+            self.toggle_monitoring()
         elif idx == 1:
-            self._switch_page(1)
-            self._refresh_settings_page()
+            self.switch_page(1)
+            self.refresh_settings_page()
         elif idx == 2:
-            self._switch_page(2)
-            self._refresh_installed_apps()
+            self.switch_page(2)
+            self.refresh_installed_apps()
         elif idx == 3:
-            self._switch_page(3)
-            self._refresh_running_apps()
+            self.switch_page(3)
+            self.load_running_apps()
         elif idx == 4:
-            self._switch_page(4)
-            self._load_reports()
+            self.switch_page(4)
+            self.load_reports()
         elif idx == 5:
-            self._reconfigure_thresholds()
+            self.switch_page(5)
         elif idx == 6:
-            self._on_exit()
+            self.on_exit()
 
-    def _switch_page(self, idx: int):
+    def switch_page(self, idx: int):
         for i, btn in enumerate(self._nav_buttons):
             btn.setChecked(i == idx)
         self.stack.setCurrentIndex(idx)
 
-    def _update_monitoring_label(self):
+    def update_monitoring_label(self):
         """Keep sidebar button text in sync with monitoring state."""
         if self.spyglass.monitoring_active:
             self._nav_buttons[0].setText("Stop Monitoring")
@@ -383,7 +414,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
                 return machine_id
         return "User"
 
-    def _build_home_page(self) -> QWidget:
+    def build_home_page(self) -> QWidget:
         page = QWidget()
         page.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(page)
@@ -393,7 +424,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
         top = QHBoxLayout()
         display_name = self.resolve_display_name().upper()
         welcome = QLabel(f"WELCOME, {display_name}")
-        welcome.setFont(QFont("Inter", 26, QFont.Weight.Bold))
+        welcome.setFont(QFont("Gruppo", 26, QFont.Weight.Bold))
         welcome.setStyleSheet(f"color: {COLORS['text_primary']}; letter-spacing: 2px;")
         top.addWidget(welcome)
         top.addStretch()
@@ -407,7 +438,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
         center = QHBoxLayout()
         center.addStretch()
         self.power_button = PowerButton(size=260)
-        self.power_button.clicked.connect(self._toggle_monitoring)
+        self.power_button.clicked.connect(self.toggle_monitoring)
         center.addWidget(self.power_button)
         center.addStretch()
         layout.addLayout(center)
@@ -419,67 +450,196 @@ class DashboardWindow(QMainWindow, GradientBackground):
     #  PAGE 1: SHOW CURRENT SETTINGS
     # ═════════════════════════════════════════════════════════════
 
-    def _build_settings_page(self) -> QWidget:
+    def build_settings_page(self) -> QWidget:
         page = QWidget()
         page.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(page)
         layout.setContentsMargins(40, 28, 40, 28)
 
+        # Header row
         top = QHBoxLayout()
         header = QLabel("CURRENT SETTINGS")
-        header.setFont(QFont("Inter UI", 24, QFont.Weight.Bold))
+        header.setFont(QFont("Inter", 24, QFont.Weight.Bold))
         header.setStyleSheet(f"letter-spacing: 4px; color: {COLORS['text_primary']};")
         top.addWidget(header)
         top.addStretch()
         self.mini_power_settings = MiniPowerIcon(48)
+        self.mini_power_settings.clicked.connect(self.toggle_monitoring)
         top.addWidget(self.mini_power_settings)
         layout.addLayout(top)
+        layout.addSpacing(20)
+
+        # Stat cards row
+        cards_row = QHBoxLayout()
+        cards_row.setSpacing(16)
+        self.settings_level_card = GlassStatCard("MONITORING LEVEL", "—")
+        self.settings_mode_card = GlassStatCard("SECURITY MODE", "—")
+        self.settings_status_card = GlassStatCard("STATUS", "—")
+        self.settings_keylogger_card = GlassStatCard("KEYLOGGER", "—")
+        cards_row.addWidget(self.settings_level_card)
+        cards_row.addWidget(self.settings_mode_card)
+        cards_row.addWidget(self.settings_status_card)
+        cards_row.addWidget(self.settings_keylogger_card)
+        layout.addLayout(cards_row)
         layout.addSpacing(16)
 
-        self.settings_display = QTextEdit()
-        self.settings_display.setReadOnly(True)
-        self.settings_display.setStyleSheet(
-            f"background: rgba(15,18,55,0.4); border: 1px solid {COLORS['panel_border']};"
-            f" border-radius: 10px; color: {COLORS['text_secondary']}; padding: 16px;"
-            f" font-family: JetBrains Mono; font-size: 13px;"
-        )
-        layout.addWidget(self.settings_display, 1)
+        # Scrollable config panels
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setStyleSheet("background: transparent; border: none;")
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_content = QWidget()
+        scroll_content.setStyleSheet("background: transparent;")
+        self._settings_panels_layout = QVBoxLayout(scroll_content)
+        self._settings_panels_layout.setSpacing(14)
+        self._settings_panels_layout.setContentsMargins(0, 0, 0, 0)
+        self._settings_panels_layout.addStretch()
+        scroll.setWidget(scroll_content)
+        layout.addWidget(scroll, 1)
 
-        QTimer.singleShot(500, self._refresh_settings_page)
+        QTimer.singleShot(500, self.refresh_settings_page)
         return page
 
-    def _refresh_settings_page(self):
+    def make_config_panel(self, title: str, items: list[tuple[str, str]]) -> GlassPanel:
+        """Build a GlassPanel with a title and key/value rows."""
+        panel = GlassPanel(radius=10, bg_alpha=60)
+        panel_layout = QVBoxLayout(panel)
+        panel_layout.setContentsMargins(18, 14, 18, 14)
+        panel_layout.setSpacing(4)
+
+        title_label = QLabel(title)
+        title_label.setFont(QFont("Inter", 11, QFont.Weight.Bold))
+        title_label.setStyleSheet(
+            f"color: {COLORS['accent_steel']}; background: transparent;"
+            f" letter-spacing: 1px; font-weight: 700;"
+        )
+        panel_layout.addWidget(title_label)
+        panel_layout.addSpacing(6)
+
+        grid = QGridLayout()
+        grid.setColumnStretch(0, 0)
+        grid.setColumnStretch(1, 1)
+        grid.setHorizontalSpacing(24)
+        grid.setVerticalSpacing(6)
+
+        for row_idx, (key, value) in enumerate(items):
+            k_label = QLabel(key)
+            k_label.setFont(QFont("Gruppo", 11, QFont.Weight.Bold))
+            k_label.setStyleSheet(f"color: {COLORS['text_secondary']}; background: transparent;")
+            k_label.setMinimumWidth(180)
+            grid.addWidget(k_label, row_idx, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+
+            v_label = QLabel(value)
+            v_label.setFont(QFont("Gruppo", 11, QFont.Weight.Bold))
+            v_label.setStyleSheet(f"color: {COLORS['text_primary']}; background: transparent;")
+            v_label.setWordWrap(True)
+            grid.addWidget(v_label, row_idx, 1, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+
+        panel_layout.addLayout(grid)
+        return panel
+
+    def refresh_settings_page(self):
         cfg = self.spyglass.config
-        lines = []
         level = self.spyglass.monitoring_level or "LOW"
         status = "ACTIVE" if self.spyglass.monitoring_active else "INACTIVE"
-        mode = "HIGH (App + Keystroke)" if (cfg and cfg.is_keylogger_enabled()) else "LOW (App Only)"
-        lines.append(f"Monitoring Level:  {level}")
-        lines.append(f"Security Mode:     {mode}")
-        lines.append(f"Monitoring Status: {status}")
-        lines.append("")
+        keylogger_on = cfg and cfg.is_keylogger_enabled()
+        mode = "HIGH (App + Keystroke)" if keylogger_on else "LOW (App Only)"
+
+        # Update stat cards
+        self.settings_level_card.set_value(level)
+        self.settings_mode_card.set_value(mode)
+        status_color = COLORS["accent_green"] if self.spyglass.monitoring_active else COLORS["accent_red"]
+        self.settings_status_card.set_value(status, color=status_color)
+        kl_color = COLORS["accent_green"] if keylogger_on else COLORS["text_muted"]
+        self.settings_keylogger_card.set_value("ENABLED" if keylogger_on else "DISABLED", color=kl_color)
+
+        # Clear old panels (keep the stretch at the end)
+        while self._settings_panels_layout.count() > 1:
+            item = self._settings_panels_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        # Build config panels from settings
         if cfg:
             try:
-                import json
                 settings = cfg.get_config() if hasattr(cfg, 'get_config') else {}
                 if settings:
-                    lines.append("--- Configuration ---")
+                    thresholds = settings.pop("thresholds", None)
+
+                    # Separate list-type keys into their own cards
+                    LIST_KEYS = {"blocklisted_apps", "script_extensions"}
+                    list_items = {}
+                    general_items = []
                     for k, v in settings.items():
-                        if k == "thresholds":
-                            lines.append(f"  {k}:")
-                            for tk, tv in v.items():
-                                lines.append(f"    {tk}: {tv}")
+                        if k in LIST_KEYS:
+                            list_items[k] = v
                         else:
-                            lines.append(f"  {k}: {v}")
+                            general_items.append((k.replace('_', ' ').title(), str(v)))
+
+                    # General config panel
+                    if general_items:
+                        self._settings_panels_layout.insertWidget(
+                            self._settings_panels_layout.count() - 1,
+                            self.make_config_panel("CONFIGURATION", general_items),
+                        )
+
+                    # Threshold panels
+                    if thresholds and isinstance(thresholds, dict):
+                        thresh_items = []
+                        for tname, tvals in thresholds.items():
+                            if isinstance(tvals, dict):
+                                parts = [f"{s.upper()}: {v}" for s, v in tvals.items()]
+                                thresh_items.append((tname.replace("_", " ").title(), "  |  ".join(parts)))
+                            else:
+                                thresh_items.append((tname, str(tvals)))
+                        if thresh_items:
+                            self._settings_panels_layout.insertWidget(
+                                self._settings_panels_layout.count() - 1,
+                                self.make_config_panel("THRESHOLDS", thresh_items),
+                            )
+
+                    # List cards (blocklisted apps, script extensions)
+                    for lk, lv in list_items.items():
+                        if isinstance(lv, list):
+                            text = ",  ".join(str(x) for x in lv)
+                        else:
+                            text = str(lv)
+                        self._settings_panels_layout.insertWidget(
+                            self._settings_panels_layout.count() - 1,
+                            self.make_list_panel(lk.replace('_', ' ').upper(), text),
+                        )
             except Exception:
                 pass
-        self.settings_display.setPlainText("\n".join(lines))
+
+    def make_list_panel(self, title: str, text: str) -> GlassPanel:
+        """Build a GlassPanel with a title and wrapping comma-separated text."""
+        panel = GlassPanel(radius=10, bg_alpha=60)
+        panel_layout = QVBoxLayout(panel)
+        panel_layout.setContentsMargins(18, 14, 18, 14)
+        panel_layout.setSpacing(8)
+
+        title_label = QLabel(title)
+        title_label.setFont(QFont("Inter", 11, QFont.Weight.Bold))
+        title_label.setStyleSheet(
+            f"color: {COLORS['accent_steel']}; background: transparent;"
+            f" letter-spacing: 1px; font-weight: 700;"
+        )
+        panel_layout.addWidget(title_label)
+
+        body = QLabel(text)
+        body.setFont(QFont("Gruppo", 11, QFont.Weight.Bold))
+        body.setStyleSheet(f"color: {COLORS['text_primary']}; background: transparent;")
+        body.setWordWrap(True)
+        panel_layout.addWidget(body)
+
+        return panel
 
     # ═════════════════════════════════════════════════════════════
     #  PAGE 2: INSTALLED APPS
     # ═════════════════════════════════════════════════════════════
 
-    def _build_installed_apps_page(self) -> QWidget:
+    def build_installed_apps_page(self) -> QWidget:
         page = QWidget()
         page.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(page)
@@ -487,7 +647,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
 
         top = QHBoxLayout()
         header = QLabel("INSTALLED APPS")
-        header.setFont(QFont("Inter UI", 24, QFont.Weight.Bold))
+        header.setFont(QFont("Inter", 24, QFont.Weight.Bold))
         header.setStyleSheet(f"letter-spacing: 4px; color: {COLORS['text_primary']};")
         top.addWidget(header)
         top.addStretch()
@@ -498,10 +658,10 @@ class DashboardWindow(QMainWindow, GradientBackground):
         self.installed_panel.setStyleSheet("background: transparent;")
         layout.addWidget(self.installed_panel, 1)
 
-        QTimer.singleShot(500, self._refresh_installed_apps)
+        QTimer.singleShot(500, self.refresh_installed_apps)
         return page
 
-    def _refresh_installed_apps(self):
+    def refresh_installed_apps(self):
         if self.spyglass.database:
             self.installed_panel.load_from_db(self.spyglass.database)
 
@@ -509,7 +669,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
     #  PAGE 3: RUNNING APPS / ANALYTICS  (stat cards + running apps + log)
     # ═════════════════════════════════════════════════════════════
 
-    def _build_analytics_page(self) -> QWidget:
+    def build_analytics_page(self) -> QWidget:
         page = QWidget()
         page.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(page)
@@ -518,11 +678,12 @@ class DashboardWindow(QMainWindow, GradientBackground):
         # Header row
         top = QHBoxLayout()
         header = QLabel("RUNNING APPS")
-        header.setFont(QFont("Inter UI", 24, QFont.Weight.Bold))
+        header.setFont(QFont("Inter", 24, QFont.Weight.Bold))
         header.setStyleSheet(f"letter-spacing: 4px; color: {COLORS['text_primary']};")
         top.addWidget(header)
         top.addStretch()
         self.mini_power = MiniPowerIcon(48)
+        self.mini_power.clicked.connect(self.toggle_monitoring)
         top.addWidget(self.mini_power)
         layout.addLayout(top)
         layout.addSpacing(20)
@@ -548,14 +709,14 @@ class DashboardWindow(QMainWindow, GradientBackground):
         # Running apps panel
         self.running_panel = RunningAppsPanel()
         self.running_panel.setStyleSheet("background: transparent;")
-        self.running_panel.table_widget.btn_refresh.clicked.connect(self._refresh_running_apps)
+        self.running_panel.table_widget.btn_refresh.clicked.connect(self.load_running_apps)
         apps_row.addWidget(self.running_panel, 1)
 
         layout.addLayout(apps_row, 1)
 
         # Activity log at bottom
         log_label = QLabel("Activity Log")
-        log_label.setFont(QFont("Inter UI", 11, QFont.Weight.Bold))
+        log_label.setFont(QFont("Gruppo", 11, QFont.Weight.Bold))
         log_label.setStyleSheet(f"color: {COLORS['text_muted']}; letter-spacing: 1px;")
         layout.addWidget(log_label)
 
@@ -571,7 +732,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
     #  PAGE 4: REPORTS  (glass table)
     # ═════════════════════════════════════════════════════════════
 
-    def _build_reports_page(self) -> QWidget:
+    def build_reports_page(self) -> QWidget:
         page = QWidget()
         page.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(page)
@@ -580,11 +741,12 @@ class DashboardWindow(QMainWindow, GradientBackground):
         # Header
         top = QHBoxLayout()
         header = QLabel("REPORTS")
-        header.setFont(QFont("Inter UI", 24, QFont.Weight.Bold))
+        header.setFont(QFont("Inter", 24, QFont.Weight.Bold))
         header.setStyleSheet(f"letter-spacing: 4px; color: {COLORS['text_primary']};")
         top.addWidget(header)
         top.addStretch()
         self.mini_power_reports = MiniPowerIcon(48)
+        self.mini_power_reports.clicked.connect(self.toggle_monitoring)
         top.addWidget(self.mini_power_reports)
         layout.addLayout(top)
         layout.addSpacing(16)
@@ -593,8 +755,9 @@ class DashboardWindow(QMainWindow, GradientBackground):
         self.reports_table = QTableWidget()
         self.reports_table.setColumnCount(3)
         self.reports_table.setHorizontalHeaderLabels(["File Name", "Date", "Size"])
-        self.reports_table.horizontalHeader().setStretchLastSection(True)
-        self.reports_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.reports_table.horizontalHeader().setStretchLastSection(False)
+        self.reports_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.reports_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.reports_table.verticalHeader().setVisible(False)
         self.reports_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.reports_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -608,21 +771,21 @@ class DashboardWindow(QMainWindow, GradientBackground):
         btn_row.addStretch()
         btn_refresh = QPushButton("Refresh")
         btn_refresh.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_refresh.clicked.connect(self._load_reports)
+        btn_refresh.clicked.connect(self.load_reports)
         btn_row.addWidget(btn_refresh)
 
         btn_settings = QPushButton("Settings")
         btn_settings.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_settings.clicked.connect(self._reconfigure_thresholds)
+        btn_settings.clicked.connect(lambda: self.switch_page(5))
         btn_row.addWidget(btn_settings)
         layout.addLayout(btn_row)
 
-        QTimer.singleShot(400, self._load_reports)
+        QTimer.singleShot(400, self.load_reports)
         return page
 
     # ── Monitoring Toggle ────────────────────────────────────────
 
-    def _toggle_monitoring(self):
+    def toggle_monitoring(self):
         if self.spyglass.monitoring_active:
             self.spyglass.stop_all_monitoring()
             self.power_button.set_active(False)
@@ -630,30 +793,30 @@ class DashboardWindow(QMainWindow, GradientBackground):
             self.mini_power.set_active(False)
             self.mini_power_reports.set_active(False)
             self.mini_power_settings.set_active(False)
-            self._update_monitoring_label()
+            self.update_monitoring_label()
             self._log("Monitoring stopped.")
             self._notification.show_notification("Spyglass monitoring stopped.")
         else:
             self.spyglass.start_all_monitoring()
-            self._hook_alert_bridge()
+            self.hook_alert_bridge()
             self.power_button.set_active(True)
             self.status_pill.set_active(True)
             self.mini_power.set_active(True)
             self.mini_power_reports.set_active(True)
             self.mini_power_settings.set_active(True)
-            self._update_monitoring_label()
+            self.update_monitoring_label()
             self._log("Monitoring started.")
             self._notification.show_notification("Spyglass monitoring is now active.")
 
     # ── Polling ──────────────────────────────────────────────────
 
-    def _start_polling(self):
+    def start_polling(self):
         self._poll_timer = QTimer(self)
-        self._poll_timer.timeout.connect(self._poll_stats)
+        self._poll_timer.timeout.connect(self.poll_stats)
         self._poll_timer.start(5000)
-        QTimer.singleShot(600, self._poll_stats)
+        QTimer.singleShot(600, self.poll_stats)
 
-    def _poll_stats(self):
+    def poll_stats(self):
         try:
             import psutil
             cpu = psutil.cpu_percent(interval=0)
@@ -666,14 +829,14 @@ class DashboardWindow(QMainWindow, GradientBackground):
         except Exception:
             pass
 
-    def _refresh_running_apps(self):
+    def load_running_apps(self):
         if self.spyglass.app_monitor:
             apps = self.spyglass.app_monitor.get_running_apps() or []
             self.running_panel.update_apps(apps)
 
     # ── Alerts ───────────────────────────────────────────────────
 
-    def _hook_alert_bridge(self):
+    def hook_alert_bridge(self):
         ae = self.spyglass.alert_engine
         if not ae:
             return
@@ -686,7 +849,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
 
         ae.raise_alert = patched
 
-    def _on_alert_raised(self, severity, alert_type, message):
+    def on_alert_raised(self, severity, alert_type, message):
         color = SEVERITY_COLORS.get(severity.upper(), COLORS["text_primary"])
         self._log(f'<span style="color:{color};font-weight:bold;">[{severity}]</span> {alert_type}: {message}')
         self._alert_count += 1
@@ -694,7 +857,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
 
     # ── Reports ──────────────────────────────────────────────────
 
-    def _load_reports(self):
+    def load_reports(self):
         reports_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Reports")
         self.reports_table.setRowCount(0)
         if not os.path.isdir(reports_dir):
@@ -712,32 +875,34 @@ class DashboardWindow(QMainWindow, GradientBackground):
 
     # ── Settings / Thresholds ────────────────────────────────────
 
-    def _reconfigure_thresholds(self):
-        dialog = ThresholdWindow(
+    def build_thresholds_page(self) -> QWidget:
+        self.threshold_page = ThresholdPage(
             monitoring_level=self.spyglass.monitoring_level or "LOW",
-            parent=self,
         )
-        if dialog.exec():
-            thresholds = dialog.get_thresholds()
-            if self.spyglass.consent:
-                self.spyglass.consent.thresholds = thresholds
-            try:
-                uid = ""
-                if self.spyglass.user_info:
-                    uid = self.spyglass.user_info.info.get("hardware", {}).get("machine_id", "")
-                from db.database import insertIntoThresholdTable
-                for name, sd in thresholds.items():
-                    for sev, val in sd.items():
-                        insertIntoThresholdTable(userID=uid, thresholdType="security",
-                                                 settingName=f"{name}_{sev}", settingValue=str(val))
-            except Exception as e:
-                logging.error(f"Failed to persist thresholds: {e}")
-            if self.spyglass.config:
-                self.spyglass.config.set_setting("thresholds", thresholds)
-                self.spyglass.config.save_config()
-            if self.spyglass.alert_engine:
-                self.spyglass.alert_engine.update_thresholds(thresholds)
-            self._log("Thresholds reconfigured.")
+        self.threshold_page.thresholds_saved.connect(self.save_thresholds)
+        return self.threshold_page
+
+    def save_thresholds(self, thresholds: dict):
+        if self.spyglass.consent:
+            self.spyglass.consent.thresholds = thresholds
+        try:
+            uid = ""
+            if self.spyglass.user_info:
+                uid = self.spyglass.user_info.info.get("hardware", {}).get("machine_id", "")
+            from db.database import insertIntoThresholdTable
+            for name, sd in thresholds.items():
+                for sev, val in sd.items():
+                    insertIntoThresholdTable(userID=uid, thresholdType="security",
+                    settingName=f"{name}_{sev}", 
+                    settingValue=str(val))
+        except Exception as e:
+            logging.error(f"Failed to persist thresholds: {e}")
+        if self.spyglass.config:
+            self.spyglass.config.set_setting("thresholds", thresholds)
+            self.spyglass.config.save_config()
+        if self.spyglass.alert_engine:
+            self.spyglass.alert_engine.update_thresholds(thresholds)
+        self._log("Thresholds saved.")
 
     # ── Helpers ──────────────────────────────────────────────────
 
@@ -747,7 +912,7 @@ class DashboardWindow(QMainWindow, GradientBackground):
             f'<span style="color:{COLORS["text_muted"]};">[{ts}]</span> {msg}'
         )
 
-    def _on_exit(self):
+    def on_exit(self):
         reply = QMessageBox.question(
             self, "Exit Spyglass", "Are you sure you want to exit?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,

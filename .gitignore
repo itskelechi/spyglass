@@ -2,3 +2,6 @@
 *.log
 *.ini
 *.db*
+.vscode/
+__pycache__/
+.venv/

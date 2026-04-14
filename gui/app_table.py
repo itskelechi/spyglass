@@ -17,7 +17,7 @@ class AppTableWidget(QWidget):
     def __init__(self, title: str, columns: list[str], parent=None):
         super().__init__(parent)
         self.columns = columns
-        self._all_rows: list[list[str]] = []
+        self.all_rows: list[list[str]] = []
         self.setStyleSheet("background: transparent;")
         self.build_ui(title)
 
@@ -29,7 +29,7 @@ class AppTableWidget(QWidget):
         # Header bar
         header_bar = QHBoxLayout()
         lbl = QLabel(title)
-        lbl.setFont(QFont("JetBrains Mono", 12, QFont.Weight.Bold))
+        lbl.setFont(QFont("Inter", 12, QFont.Weight.Bold))
         lbl.setStyleSheet(
             f"color: {COLORS['accent_steel']}; background: transparent; letter-spacing: 2px;"
         )
@@ -92,8 +92,9 @@ class AppTableWidget(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(len(self.columns))
         self.table.setHorizontalHeaderLabels(self.columns)
-        self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.table.horizontalHeader().setStretchLastSection(False)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.setAlternatingRowColors(True)
@@ -130,13 +131,13 @@ class AppTableWidget(QWidget):
         layout.addWidget(self.table, 1)
 
     def set_data(self, rows: list[list[str]]):
-        self._all_rows = rows
+        self.all_rows = rows
         self.apply_filter(self.search_input.text())
 
     def apply_filter(self, text: str):
         text = text.lower()
         filtered = [
-            row for row in self._all_rows
+            row for row in self.all_rows
             if not text or any(text in str(cell).lower() for cell in row)
         ]
         self.table.setSortingEnabled(False)

@@ -116,14 +116,37 @@ class GlassSidebar(QFrame):
         path.lineTo(rect.left(), rect.bottom())
         path.closeSubpath()
 
-        p.fillPath(path, QColor(8, 12, 24, 220))
+        # Base fill: deep blue glass matching wireframe
+        base_grad = QLinearGradient(rect.topLeft(), rect.bottomLeft())
+        base_grad.setColorAt(0.0,  QColor(8, 14, 50, 180))    # deep navy top
+        base_grad.setColorAt(0.4,  QColor(12, 22, 72, 170))   # mid blue
+        base_grad.setColorAt(0.8,  QColor(10, 18, 60, 165))   # stays deep
+        base_grad.setColorAt(1.0,  QColor(6, 12, 45, 175))    # bottom
+        p.fillPath(path, base_grad)
 
-        top_sheen = QLinearGradient(rect.topLeft(), QPointF(rect.left(), rect.top() + 120))
-        top_sheen.setColorAt(0, QColor(255, 255, 255, 10))
-        top_sheen.setColorAt(1, QColor(255, 255, 255, 0))
+        # Subtle top-left sheen (very restrained)
+        top_sheen = QLinearGradient(rect.topLeft(), QPointF(rect.left(), rect.top() + 100))
+        top_sheen.setColorAt(0, QColor(160, 185, 255, 14))
+        top_sheen.setColorAt(0.3, QColor(120, 150, 230, 6))
+        top_sheen.setColorAt(1, QColor(0, 0, 0, 0))
         p.fillPath(path, top_sheen)
 
-        p.setPen(QPen(QColor(210, 225, 255, 24), 1))
+        # Right edge: pink/violet accent (wireframe signature)
+        edge_iri = QLinearGradient(QPointF(rect.right() - 30, rect.top()), QPointF(rect.right(), rect.center().y()))
+        edge_iri.setColorAt(0.0, QColor(0, 0, 0, 0))
+        edge_iri.setColorAt(0.5, QColor(160, 100, 220, 20))   # violet
+        edge_iri.setColorAt(0.8, QColor(200, 120, 180, 22))   # pink
+        edge_iri.setColorAt(1.0, QColor(180, 140, 255, 12))   # fade
+        p.fillPath(path, edge_iri)
+
+        # Bottom-left cyan glow
+        cyan_glow = QRadialGradient(QPointF(rect.left() + 30, rect.bottom() - 20), 80)
+        cyan_glow.setColorAt(0.0, QColor(60, 200, 240, 28))
+        cyan_glow.setColorAt(0.5, QColor(40, 160, 220, 12))
+        cyan_glow.setColorAt(1.0, QColor(0, 0, 0, 0))
+        p.fillPath(path, cyan_glow)
+
+        p.setPen(QPen(QColor(210, 225, 255, 55), 1.2))
         p.drawPath(path)
 
         p.end()
@@ -141,7 +164,11 @@ class PowerButton(QWidget):
         super().__init__(parent)
         self._size = size
         self._active = False
-        self.setFixedSize(size, size)
+        self._hovered = False
+        # Extra padding so glow doesn't clip
+        pad = int(size * 0.18)
+        self.setFixedSize(size + pad * 2, size + pad * 2)
+        self._pad = pad
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def is_active(self) -> bool:
@@ -155,6 +182,14 @@ class PowerButton(QWidget):
         self._active = not self._active
         self.update()
 
+    def enterEvent(self, event):
+        self._hovered = True
+        self.update()
+
+    def leaveEvent(self, event):
+        self._hovered = False
+        self.update()
+
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
@@ -164,7 +199,8 @@ class PowerButton(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         s = self._size
-        cx, cy = s / 2, s / 2
+        pad = self._pad
+        cx, cy = pad + s / 2, pad + s / 2
         r = s * 0.45  # main radius
 
         # Choose colour
@@ -177,14 +213,23 @@ class PowerButton(QWidget):
             glow_color = QColor(196, 69, 105, 50)
             icon_color = QColor(196, 100, 130, 160)
 
-        # Outer glow
+        # Hover: ice accent tint
+        if self._hovered:
+            ice = QColor(COLORS["accent_ice"])
+            ring_color = ice
+            glow_color = QColor(ice.red(), ice.green(), ice.blue(), 55)
+            icon_color = QColor(ice.red(), ice.green(), ice.blue(), 160)
+
+        # Outer glow (radial ellipse, not fillRect)
         glow = QRadialGradient(QPointF(cx, cy), r * 1.3)
         glow.setColorAt(0.5, glow_color)
         glow.setColorAt(1.0, QColor(0, 0, 0, 0))
-        p.fillRect(self.rect(), glow)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(glow))
+        p.drawEllipse(QPointF(cx, cy), r * 1.3, r * 2.5)
 
         # Glass sphere
-        sphere_grad = QRadialGradient(QPointF(cx, cy * 0.8), r)
+        sphere_grad = QRadialGradient(QPointF(cx, cy * 0.9), r)
         sphere_grad.setColorAt(0.0, QColor(40, 50, 110, 120))
         sphere_grad.setColorAt(0.6, QColor(20, 25, 70, 100))
         sphere_grad.setColorAt(1.0, QColor(10, 12, 50, 80))
@@ -214,7 +259,7 @@ class PowerButton(QWidget):
         p.setPen(icon_pen)
         arc_r = r * 0.32
         arc_rect = QRectF(cx - arc_r, cy - arc_r, arc_r * 2, arc_r * 2)
-        p.drawArc(arc_rect, 60 * 16, 240 * 16)  # open at top
+        p.drawArc(arc_rect, 120 * 16, 300 * 16)  # open at top
 
         # Power icon: vertical line
         p.drawLine(QPointF(cx, cy - arc_r - 4), QPointF(cx, cy - arc_r * 0.15))
@@ -227,7 +272,7 @@ class PowerButton(QWidget):
 # ═══════════════════════════════════════════════════════════════════
 
 class StatusPill(QFrame):
-    """Rounded-pill status indicator matching the wireframe banner."""
+    """Pill status indicator matching the wireframe banner."""
 
     def __init__(self, logo_path: str = "", parent=None):
         super().__init__(parent)
@@ -237,7 +282,7 @@ class StatusPill(QFrame):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         self._active = False
-        self._text = "Your system is not being monitored."
+        self._text = "SPYGLASS is not watching."
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(16, 0, 20, 0)
@@ -256,11 +301,11 @@ class StatusPill(QFrame):
             self._icon_label.setPixmap(pixmap)
         else:
             self._icon_label.setText("⊙")
-            self._icon_label.setFont(QFont("Inter UI", 18))
+            self._icon_label.setFont(QFont("Gruppo", 18))
         layout.addWidget(self._icon_label)
 
         self._text_label = QLabel(self._text)
-        self._text_label.setFont(QFont("Inter UI", 11))
+        self._text_label.setFont(QFont("Gruppo", 11))
         self._text_label.setWordWrap(True)
         self._text_label.setStyleSheet(f"color: {COLORS['text_secondary']};")
         layout.addWidget(self._text_label)
@@ -268,10 +313,10 @@ class StatusPill(QFrame):
     def set_active(self, active: bool):
         self._active = active
         if active:
-            self._text_label.setText("Your system is now being monitored.")
+            self._text_label.setText("SPYGLASS is now watching.")
             self._text_label.setStyleSheet(f"color: {COLORS['text_primary']};")
         else:
-            self._text_label.setText("Your system is not being monitored.")
+            self._text_label.setText("SPYGLASS is no longer watching.")
             self._text_label.setStyleSheet(f"color: {COLORS['text_secondary']};")
         self.update()
 
@@ -279,7 +324,7 @@ class StatusPill(QFrame):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = QRectF(self.rect()).adjusted(1, 1, -1, -1)
-        radius = rect.height() / 2
+        radius = 14
 
         path = QPainterPath()
         path.addRoundedRect(rect, radius, radius)
@@ -319,12 +364,12 @@ class GlassStatCard(GlassPanel):
         layout.setContentsMargins(18, 14, 18, 14)
 
         self.title_label = QLabel(title)
-        self.title_label.setFont(QFont("Inter UI", 10))
+        self.title_label.setFont(QFont("Gruppo", 10))
         self.title_label.setStyleSheet(f"color: {COLORS['text_muted']}; letter-spacing: 1px;")
         layout.addWidget(self.title_label)
 
         self.value_label = QLabel(value)
-        self.value_label.setFont(QFont("Inter UI", 22, QFont.Weight.Bold))
+        self.value_label.setFont(QFont("Gruppo", 22, QFont.Weight.Bold))
         layout.addWidget(self.value_label)
 
         from PyQt6.QtWidgets import QProgressBar

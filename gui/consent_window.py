@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal, QRectF, QPointF
 from PyQt6.QtGui import QFont, QPainter, QColor, QLinearGradient, QRadialGradient, QPen, QPixmap, QIcon
 
-LOGO = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logo", "spyglass_logo.png")
+LOGO = os.path.join(os.path.dirname(__file__), "logo", "spyglass_logo.png")
 
 from gui.styles import COLORS
 from gui.glass_widgets import GradientBackground, GlassPanel
@@ -25,19 +25,19 @@ class ConsentWindow(QDialog, GradientBackground):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Spyglass — User Consent")
-        self.setMaximumSize(800, 400)
         self.setModal(True)
         if os.path.isfile(LOGO):
             self.setWindowIcon(QIcon(LOGO))
-        #calc user screen size - cap at 800×400
+        # Cap at 620×700 so content fits without buttons getting lost
         screen = QApplication.primaryScreen()
         if screen:
             avail = screen.availableGeometry()
-            w = max(800, int(avail.width() * 0.85))
-            h = max(400, int(avail.height() * 0.7))
+            w = min(620, int(avail.width() * 0.55))
+            h = min(700, int(avail.height() * 0.8))
             self.resize(w, h)
         else:
-            self.resize(800, 400)
+            self.resize(620, 700)
+        self.setMaximumWidth(620)
         self.build_ui()
 
     def paintEvent(self, event):
@@ -45,9 +45,22 @@ class ConsentWindow(QDialog, GradientBackground):
         super().paintEvent(event)
 
     def build_ui(self):
-        layout = QVBoxLayout(self)
+        outer = QVBoxLayout(self)
+        outer.setSpacing(0)
+        outer.setContentsMargins(0, 0, 0, 0)
+
+        # Scrollable body
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setStyleSheet("background: transparent; border: none;")
+
+        body = QWidget()
+        body.setStyleSheet("background: transparent;")
+        layout = QVBoxLayout(body)
         layout.setSpacing(16)
-        layout.setContentsMargins(40, 28, 40, 28)
+        layout.setContentsMargins(40, 12, 40, 12)
 
         # Logo + SPYGLASS header
         title_row = QHBoxLayout()
@@ -56,34 +69,35 @@ class ConsentWindow(QDialog, GradientBackground):
         if os.path.isfile(LOGO):
             logo_label = QLabel()
             pixmap = QPixmap(LOGO).scaled(
-                60, 100, Qt.AspectRatioMode.KeepAspectRatio,
+                80, 120, Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             )
             logo_label.setPixmap(pixmap)
             logo_label.setStyleSheet("background: transparent;")
             title_row.addWidget(logo_label)
         header = QLabel("WELCOME TO SPYGLASS")
-        header.setFont(QFont("Inter", 24, QFont.Weight.Bold))
-        header.setStyleSheet(f"color: {COLORS['text_primary']}; letter-spacing: 6px; margin-bottom: -4px;")
+        header.setFont(QFont("Bungee Hairline", 24, QFont.Weight.DemiBold))
+        header.setStyleSheet(f"color: {COLORS['text_primary']}; letter-spacing: 4px;")
         title_row.addWidget(header)
         title_row.addStretch()
         layout.addLayout(title_row)
+        layout.addSpacing(-32)
 
-        sub = QLabel("User Consent & Monitoring Agreement")
+        sub = QLabel("USER CONSENT AGREEMENT")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sub.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 18px;")
+        sub.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 18px; font-family: 'Gruppo', 'Segoe UI', Arial, sans-serif; letter-spacing: 2px;")
         layout.addWidget(sub)
-        layout.addSpacing(5)
+        layout.addSpacing(-5)
 
         # Disclosure in glass panel
         disclosure_panel = GlassPanel(radius=10, bg_alpha=70)
         dp_layout = QVBoxLayout(disclosure_panel)
-        dp_layout.setContentsMargins(20, 16, 20, 16)
+        dp_layout.setContentsMargins(12, 8, 12, 8)
 
         disclosure = QTextEdit()
         disclosure.setReadOnly(True)
         disclosure.setHtml(self._disclosure_html())
-        disclosure.setMinimumHeight(300)
+        disclosure.setMinimumHeight(250)
         disclosure.setStyleSheet(
             f"background: transparent; border: none; color: {COLORS['text_secondary']};"
         )
@@ -93,36 +107,40 @@ class ConsentWindow(QDialog, GradientBackground):
         # Monitoring level in glass panel
         level_panel = GlassPanel(radius=10, bg_alpha=60)
         level_layout = QVBoxLayout(level_panel)
-        level_layout.setContentsMargins(24, 18, 24, 18)
+        level_layout.setContentsMargins(20, 16, 20, 16)
 
         level_label = QLabel("SELECT YOUR MONITORING PREFERENCE")
-        level_label.setFont(QFont("Inter UI", 12, QFont.Weight.Bold))
-        level_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        level_label.setFont(QFont("Inter", 10, QFont.Weight.Bold))
+        level_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         level_label.setStyleSheet(f"letter-spacing: 2px; color: {COLORS['text_primary']};")
         level_layout.addWidget(level_label)
-        level_layout.addSpacing(10)
+        level_layout.addSpacing(5)
 
         self.level_group = QButtonGroup(self)
 
         self.radio_low = QRadioButton(
             "LOW  —  Basic monitoring (processes, system info)"
         )
-        self.radio_low.setStyleSheet(f"font-size: 14px; padding: 8px; color: {COLORS['text_primary']};")
+        self.radio_low.setStyleSheet(f"font-size: 12px; padding: 2px; color: {COLORS['text_primary']}; font-family: 'Gruppo', 'Segoe UI', Arial, sans-serif; letter-spacing: 1px;")
         self.level_group.addButton(self.radio_low)
         level_layout.addWidget(self.radio_low)
 
         self.radio_high = QRadioButton(
             "HIGH  —  Full monitoring (includes keystroke logging)"
         )
-        self.radio_high.setStyleSheet(f"font-size: 14px; padding: 8px; color: {COLORS['text_primary']};")
+        self.radio_high.setStyleSheet(f"font-size: 12px; padding: 2px; color: {COLORS['text_primary']}; font-family: 'Gruppo', 'Segoe UI', Arial, sans-serif; letter-spacing: 1px;")
         self.level_group.addButton(self.radio_high)
         level_layout.addWidget(self.radio_high)
 
         self.radio_low.setChecked(True)
         layout.addWidget(level_panel)
 
-        # Buttons
+        scroll.setWidget(body)
+        outer.addWidget(scroll, 1)
+
+        # Buttons — pinned below scroll area, always visible
         btn_layout = QHBoxLayout()
+        btn_layout.setContentsMargins(40, 12, 40, 20)
         btn_layout.addStretch()
 
         self.btn_decline = QPushButton("Decline")
@@ -130,14 +148,15 @@ class ConsentWindow(QDialog, GradientBackground):
         self.btn_decline.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_decline.clicked.connect(self._on_decline)
         btn_layout.addWidget(self.btn_decline)
+        btn_layout.addSpacing(12)
 
-        self.btn_accept = QPushButton("I Accept — Continue")
+        self.btn_accept = QPushButton("Accept")
         self.btn_accept.setObjectName("accent")
         self.btn_accept.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_accept.clicked.connect(self._on_accept)
         btn_layout.addWidget(self.btn_accept)
 
-        layout.addLayout(btn_layout)
+        outer.addLayout(btn_layout)
 
     def _on_accept(self):
         level = "HIGH" if self.radio_high.isChecked() else "LOW"
@@ -154,8 +173,11 @@ class ConsentWindow(QDialog, GradientBackground):
     @staticmethod
     def _disclosure_html() -> str:
         return f"""
-        <div style="font-family: Inter UI; font-size: 13px; line-height: 1.7; color: {COLORS['text_secondary']};">
+        <div style="font-family: Gruppo; font-size: 13px; line-height: 1.9; color: {COLORS['text_secondary']}; letter-spacing: 1px; font-weight: 700;">
         <h3 style="color: {COLORS['text_primary']}; letter-spacing: 2px;">MONITORING DISCLOSURE</h3>
+        <p style="color: {COLORS['accent_red']}; font-weight: bold;">
+        &#9888; This application captures sensitive data.
+        </p>
         <p>This application will monitor and log the following activities on your device:</p>
 
         <h4 style="color: {COLORS['text_primary']};">BASIC MONITORING (All Levels)</h4>
@@ -172,10 +194,6 @@ class ConsentWindow(QDialog, GradientBackground):
             <li>Character frequency analysis</li>
             <li>Modifier key combinations</li>
         </ul>
-
-        <p style="color: {COLORS['accent_red']}; font-weight: bold;">
-        &#9888; IMPORTANT: This application captures sensitive input data.
-        </p>
 
         <hr style="border-color: rgba(100,120,200,0.2);">
 

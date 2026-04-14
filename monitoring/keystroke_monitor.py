@@ -10,7 +10,7 @@ import threading
 class KeystrokeMonitor:
     #Monitor keystrokes
     
-    def __init__(self, time_interval: int = 60, log_file: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Reports', 'keystrokes.log')):
+    def __init__(self, time_interval: int = 60, log_file: str = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'Reports', 'keystrokes.log')):
         print("Initializing KeystrokeMonitor...")
         
         self.running = False
@@ -38,6 +38,7 @@ class KeystrokeMonitor:
     
     def updateLog(self, string: str):
         self.interval_start = datetime.datetime.now()
+        os.makedirs(os.path.dirname(self.log_file), exist_ok=True)
         with open(self.log_file, 'a') as l:
             l.write(f"{self.interval_start} - {string}\n")
     

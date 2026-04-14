@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox, QSplashScreen
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QObject
 from PyQt6.QtGui import QFont, QIcon
 
-from gui.styles import GLOBAL_STYLESHEET, COLORS
+from gui.styles import GLOBAL_STYLESHEET, COLORS, load_fonts
 from gui.consent_window import ConsentWindow
 from gui.threshold_window import ThresholdWindow
 from gui.dashboard import DashboardWindow
@@ -102,8 +102,9 @@ def run_gui():
     logging.info(f"Log file: {log_file}")
 
     app = QApplication(sys.argv)
+    load_fonts()
     app.setApplicationName("Spyglass")
-    _logo = os.path.join(os.path.dirname(__file__), "logo", "spyglass_logo.png")
+    _logo = os.path.join(os.path.dirname(__file__), "gui", "logo", "spyglass_logo.png")
     if os.path.isfile(_logo):
         app.setWindowIcon(QIcon(_logo))
     app.setStyleSheet(GLOBAL_STYLESHEET)

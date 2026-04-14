@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo/spyglass_logo.png" alt="Spyglass Logo" width="150" />
+  <img src="gui/logo/spyglass_logo.png" alt="Spyglass Logo" width="150" />
 </p>
 
 # Spyglass - Device Monitoring & Keystroke Logger

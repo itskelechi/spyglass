@@ -193,7 +193,7 @@ class AlertEngine:
         for script in scripts:
             if script['name'].lower() in BLOCKLISTED_APPS:
                 if script['name'].lower() in {'spyglass.exe', 'spyglass.py'}:
-                    msg = f"SPYGLASS is Actively Monitoring"
+                    msg = f"SPYGLASS is now watching your device"
                 else:
                     msg = f"Blocklisted app detected: {script['name']} (PID {script['pid']})"
                 self.raise_alert(
@@ -321,27 +321,26 @@ class AlertEngine:
     def show_popup(self, severity: str, message: str, key: str,
                    alert_id: Optional[int] = None):
         bg = SEVERITY_COLOURS.get(severity, '#000')
-        popup_w, popup_h = 280, 120
+        popup_w, popup_h = 380, 120
         root = tk.Tk()
         root.title(f"SPYGLASS ALERT")
         root.configure(bg=bg)
         root.overrideredirect(True)          # borderless window
         root.attributes("-topmost", True)
-        root.attributes("-alpha", 0.75)      # semi-transparent
         screen_w = root.winfo_screenwidth()
         root.geometry(f"{popup_w}x{popup_h}+{screen_w - popup_w - 75}+20")
         root.resizable(False, False)
 
         # ── title ──
         tk.Label(root, text=f"SPYGLASS ALERT ({severity.upper()})",
-                 font=("Inter UI", 9, "bold"),
+                 font=("Gruppo", 9, "bold"),
                  bg=bg, fg="#ffffff", anchor='w').pack(fill='x', padx=10, pady=(8, 0))
 
         # ── message ──
         tk.Label(root, text=message.upper(),
-                 font=("Inter UI", 8, "bold"),
+                 font=("Gruppo", 8, "bold"),
                  bg=bg, fg="#ffffff",
-                 wraplength=255, justify='left', anchor='nw').pack(fill='both', expand=True, padx=10, pady=(4, 0))
+                 wraplength=355, justify='left', anchor='nw').pack(fill='both', expand=True, padx=10, pady=(4, 0))
 
         # ── button bar ──
         btn_frame = tk.Frame(root, bg=bg)
@@ -359,7 +358,7 @@ class AlertEngine:
                 self.alert_history.pop((severity, key), None)
             root.destroy()
 
-        btn_style = dict(font=("Inter UI", 8, "bold"), fg="#ffffff",
+        btn_style = dict(font=("Gruppo", 8, "bold"), fg="#ffffff",
                          relief='flat', cursor='hand2', pady=4)
         tk.Button(btn_frame, text="DISMISS", command=dismiss,
                   bg="#dad8d8", activebackground="#3e5a6a",

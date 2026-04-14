@@ -1,18 +1,30 @@
 """Spyglass theme system — darker, sharper, metallic glass."""
 
 import os as _os
+from PyQt6.QtGui import QFontDatabase
 
 LOGO = _os.path.join(
-    _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+    _os.path.dirname(_os.path.abspath(__file__)),
     "logo", "spyglass_logo.png",
 ).replace("\\", "/")
+
+FONT_DIR = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "fonts")
+
+def load_fonts():
+    """Register custom fonts. Call after QApplication is created."""
+    for ttf in [
+        "Bungee_Hairline/BungeeHairline-Regular.ttf",
+        "Gruppo/Gruppo-Regular.ttf",
+        "Inter/Inter-VariableFont_opsz,wght.ttf",
+    ]:
+        QFontDatabase.addApplicationFont(_os.path.join(FONT_DIR, ttf))
 
 COLORS = {
     # Core background
     "bg_0": "#05070f",
     "bg_1": "#04184f",
-    "bg_2": "#2d3244",
-    "bg_3": "#313e72",
+    "bg_2": "#1d2a58",
+    "bg_3": "#0D299C",
 
     # Surface + glass
     "panel_fill": "rgba(10, 14, 28, 0.72)",
@@ -70,12 +82,14 @@ GLOBAL_STYLESHEET = f"""
     QMainWindow, QDialog {{
         {BG_GRADIENT_CSS}
         color: {COLORS['text_primary']};
-        font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+        font-family: 'Gruppo', 'Segoe UI', Arial, sans-serif;
+        font-weight: 700;
     }}
 
     QWidget {{
         color: {COLORS['text_primary']};
-        font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+        font-family: 'Gruppo', 'Segoe UI', Arial, sans-serif;
+        font-weight: 700;
         background: transparent;
     }}
 
@@ -104,21 +118,29 @@ GLOBAL_STYLESHEET = f"""
     }}
 
     QPushButton#accent {{
-        background-color: rgba(124, 141, 255, 0.16);
-        border: 1px solid rgba(124, 141, 255, 0.30);
+        background-color: rgba(68, 207, 108, 0.30);
+        border: 1px solid rgba(68, 207, 108, 0.5);
     }}
 
     QPushButton#accent:hover {{
-        background-color: rgba(124, 141, 255, 0.22);
+        background-color: rgba(68, 207, 108, 0.45);
+        border: 1px solid rgba(68, 207, 108, 0.95);
     }}
 
     QPushButton#danger {{
-        background-color: rgba(255, 92, 122, 0.14);
+        background-color: rgba(255, 92, 122, 0.30);
         border: 1px solid rgba(255, 92, 122, 0.24);
     }}
 
     QPushButton#danger:hover {{
-        background-color: rgba(255, 92, 122, 0.20);
+        background-color: rgba(255, 92, 122, 0.18);
+        border: 1px solid rgba(255, 92, 122, 0.95);
+        padding: 10px 17px;
+        background: qlineargradient(
+            x1:0, y1:0, x2:1, y2:1,
+            stop:0 rgba(255, 225, 225, 0.15),
+            stop:1 rgba(255, 92, 122, 0.30)
+        );
     }}
     
     QRadioButton, QCheckBox {{
@@ -143,7 +165,7 @@ GLOBAL_STYLESHEET = f"""
     }}
 
     QLineEdit, QSpinBox, QComboBox {{
-        background-color: rgba(255,255,255,0.035);
+        background-color: rgba(20, 28, 55, 0.90);
         color: {COLORS['text_primary']};
         border: 1px solid {COLORS['panel_border']};
         border-radius: 10px;
@@ -206,5 +228,48 @@ GLOBAL_STYLESHEET = f"""
             stop:1 rgba(124,141,255,0.85)
         );
         border-radius: 4px;
+    }}
+
+    /* Neon-line scrollbar */
+    QScrollBar:vertical {{
+        background: transparent;
+        width: 2px;
+        margin: 2px 0px;
+    }}
+    QScrollBar::handle:vertical {{
+        background: rgba(234, 242, 255, 0.35);
+        border-radius: 1px;
+        min-height: 30px;
+        border: 1px solid rgba(234, 242, 255, 0.12);
+    }}
+    QScrollBar::handle:vertical:hover {{
+        background: rgba(234, 242, 255, 0.60);
+    }}
+    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+        height: 0px;
+    }}
+    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+        background: transparent;
+    }}
+
+    QScrollBar:horizontal {{
+        background: transparent;
+        height: 6px;
+        margin: 0px 4px;
+    }}
+    QScrollBar::handle:horizontal {{
+        background: rgba(234, 242, 255, 0.35);
+        border-radius: 3px;
+        min-width: 30px;
+        border: 1px solid rgba(234, 242, 255, 0.12);
+    }}
+    QScrollBar::handle:horizontal:hover {{
+        background: rgba(234, 242, 255, 0.60);
+    }}
+    QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
+        width: 0px;
+    }}
+    QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
+        background: transparent;
     }}
 """
