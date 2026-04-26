@@ -7,5 +7,82 @@
   "max_storage_mb": 1000,
   "debug_logging": false,
   "auto_backup_enabled": false,
-  "database_encryption": true
+  "database_encryption": true,
+  "blocklisted_apps": [
+    "ammyy.exe",
+    "anydesk.exe",
+    "crunch.exe",
+    "fiddler.exe",
+    "hashcat.exe",
+    "hydra.exe",
+    "john.exe",
+    "lazagne.exe",
+    "logmein.exe",
+    "mimikatz.exe",
+    "msfvenom.exe",
+    "nc.exe",
+    "ncat.exe",
+    "netcat.exe",
+    "netsh.exe",
+    "nmap.exe",
+    "plink.exe",
+    "socat.exe",
+    "spyglass.exe",
+    "spyglass.py",
+    "tcpdump.exe",
+    "teamviewer.exe",
+    "ultraviewer.exe",
+    "wireshark.exe"
+  ],
+  "script_extensions": [
+    ".bat",
+    ".cmd",
+    ".exe",
+    ".gs",
+    ".js",
+    ".ps1",
+    ".py",
+    ".vbs",
+    ".wsf"
+  ],
+  "alert_polling_interval": 15,
+  "alert_popup_auto_close": 30,
+  "thresholds": {
+    "cpu_limit": {
+      "low": 30,
+      "medium": 55,
+      "high": 70,
+      "critical": 90
+    },
+    "memory_limit": {
+      "low": 40,
+      "medium": 65,
+      "high": 75,
+      "critical": 90
+    },
+    "process_activity": {
+      "low": 20,
+      "medium": 50,
+      "high": 100,
+      "critical": 200
+    },
+    "same_script_limit": {
+      "low": 10,
+      "medium": 20,
+      "high": 50,
+      "critical": 100
+    },
+    "keystroke_frequency": {
+      "low": 40,
+      "medium": 60,
+      "high": 100,
+      "critical": 120
+    },
+    "modifier_key_threshold": {
+      "low": 10,
+      "medium": 25,
+      "high": 50,
+      "critical": 75
+    }
+  }
 }
