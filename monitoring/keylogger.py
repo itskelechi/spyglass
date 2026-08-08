@@ -190,7 +190,7 @@ class Keylogger:
         if not self.database or not getattr(self.database, 'connection', None):
             return None
 
-        user_id = self._resolve_user_id()
+        user_id = self.resolve_user_id()
         if not user_id:
             return None
 
