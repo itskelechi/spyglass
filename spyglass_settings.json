@@ -1,6 +1,6 @@
 {
-  "monitoring_level": "HIGH",
-  "keystroke_logging_enabled": true,
+  "monitoring_level": "LOW",
+  "keystroke_logging_enabled": false,
   "app_monitoring_enabled": true,
   "screenshot_interval": 0,
   "video_recording_enabled": false,
@@ -57,12 +57,12 @@
     "memory_limit": {
       "low": 40,
       "medium": 65,
-      "high": 75,
-      "critical": 90
+      "high": 73,
+      "critical": 80
     },
     "process_activity": {
       "low": 20,
-      "medium": 50,
+      "medium": 55,
       "high": 100,
       "critical": 200
     },
@@ -71,18 +71,6 @@
       "medium": 20,
       "high": 50,
       "critical": 100
-    },
-    "keystroke_frequency": {
-      "low": 40,
-      "medium": 60,
-      "high": 100,
-      "critical": 120
-    },
-    "modifier_key_threshold": {
-      "low": 10,
-      "medium": 25,
-      "high": 50,
-      "critical": 75
     }
   }
 }
